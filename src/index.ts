@@ -9,6 +9,7 @@ import { handleListJobs, handleGetJob } from './routes/jobs';
 import { handleRegister, handleLogin, handleLogout, handleMe } from './routes/auth';
 import { handleSaveJob, handleRemoveJob, handleListSavedJobs } from './routes/savedJobs';
 import { handleApplyJob, handleListApplications, handleGetApplication, handleUpdateApplicationStatus } from './routes/applications';
+import { handleCreateSavedSearch, handleListSavedSearches, handleGetSavedSearch, handleUpdateSavedSearch, handleDeleteSavedSearch, handleListJobAlerts, handleMarkAlertRead } from './routes/savedSearches';
 import { authMiddleware, requireAuth } from './middleware/auth';
 import { JobListView } from './views/JobList';
 import { JobDetailView } from './views/JobDetail';
@@ -406,6 +407,45 @@ app.patch('/api/applications/:id', async (c) => {
   return handleUpdateApplicationStatus(c);
 });
 
+// ===== SAVED SEARCH ENDPOINTS =====
+
+// Create saved search
+app.post('/api/saved-searches', async (c) => {
+  return handleCreateSavedSearch(c);
+});
+
+// List saved searches
+app.get('/api/saved-searches', async (c) => {
+  return handleListSavedSearches(c);
+});
+
+// Get saved search
+app.get('/api/saved-searches/:id', async (c) => {
+  return handleGetSavedSearch(c);
+});
+
+// Update saved search
+app.patch('/api/saved-searches/:id', async (c) => {
+  return handleUpdateSavedSearch(c);
+});
+
+// Delete saved search
+app.delete('/api/saved-searches/:id', async (c) => {
+  return handleDeleteSavedSearch(c);
+});
+
+// ===== JOB ALERT ENDPOINTS =====
+
+// List job alerts
+app.get('/api/job-alerts', async (c) => {
+  return handleListJobAlerts(c);
+});
+
+// Mark alert as read
+app.patch('/api/job-alerts/:id', async (c) => {
+  return handleMarkAlertRead(c);
+});
+
 // ===== PUBLIC API ENDPOINTS =====
 
 // List jobs with pagination, filtering, search, sorting
@@ -434,6 +474,16 @@ export default {
           const result = await scraperService.runAll();
           
           console.log('Scraper pipeline completed:', JSON.stringify(result.summary));
+
+          // Evaluate saved searches and create alerts
+          const { SavedSearchAlertService } = await import('./services/SavedSearchAlertService');
+          const { SavedSearchRepository } = await import('./repositories/SavedSearchRepository');
+          
+          const alertRepo = new SavedSearchRepository(env.DB);
+          const alertService = new SavedSearchAlertService(env.DB, alertRepo);
+          
+          const alertResult = await alertService.evaluateAllSavedSearches();
+          console.log('Alert evaluation completed:', JSON.stringify(alertResult));
         } catch (error) {
           console.error('Scraper pipeline failed:', error);
         }
