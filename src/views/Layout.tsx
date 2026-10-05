@@ -1,22 +1,21 @@
 // JOBWORKERS Frontend Layout
 // Base HTML layout for server-rendered pages
 
-import { html } from 'hono/html';
-
 interface LayoutProps {
   title: string;
   children: any;
   user?: any;
 }
 
-export const Layout = ({ title, children, user }: LayoutProps) => html`
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${title} - JOBWORKERS</title>
-      <style>
+export const Layout = ({ title, children, user }: LayoutProps) => (
+  <>
+    {"<!DOCTYPE html>"}
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title} - JOBWORKERS</title>
+        <style>{`
         * {
           margin: 0;
           padding: 0;
@@ -336,33 +335,38 @@ export const Layout = ({ title, children, user }: LayoutProps) => html`
             width: 100%;
           }
         }
-      </style>
-    </head>
-    <body>
-      <header>
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <h1>JOBWORKERS</h1>
-            <p>Remote job opportunities aggregated from top sources</p>
+        }`}</style>
+      </head>
+      <body>
+        <header>
+          <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h1>JOBWORKERS</h1>
+              <p>Remote job opportunities aggregated from top sources</p>
+            </div>
+            <nav style="display: flex; gap: 1.5rem; align-items: center; font-size: 0.875rem;">
+              <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Jobs</a>
+              {user ? (
+                <>
+                  <a href="/saved-searches" style="color: white; text-decoration: none; font-weight: 500;">Saved Searches</a>
+                  <a href="/alerts" style="color: white; text-decoration: none; font-weight: 500;">Alerts</a>
+                  <a href="/saved-jobs" style="color: white; text-decoration: none; font-weight: 500;">Saved Jobs</a>
+                  <a href="/applications" style="color: white; text-decoration: none; font-weight: 500;">Applications</a>
+                  <a href="/account" style="color: white; text-decoration: none; font-weight: 500;">Account</a>
+                </>
+              ) : (
+                <>
+                  <a href="/login" style="color: white; text-decoration: none; font-weight: 500;">Login</a>
+                  <a href="/register" style="color: white; text-decoration: none; font-weight: 500;">Register</a>
+                </>
+              )}
+            </nav>
           </div>
-          <nav style="display: flex; gap: 1.5rem; align-items: center; font-size: 0.875rem;">
-            <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Jobs</a>
-            ${user ? html`
-              <a href="/saved-searches" style="color: white; text-decoration: none; font-weight: 500;">Saved Searches</a>
-              <a href="/alerts" style="color: white; text-decoration: none; font-weight: 500;">Alerts</a>
-              <a href="/saved-jobs" style="color: white; text-decoration: none; font-weight: 500;">Saved Jobs</a>
-              <a href="/applications" style="color: white; text-decoration: none; font-weight: 500;">Applications</a>
-              <a href="/account" style="color: white; text-decoration: none; font-weight: 500;">Account</a>
-            ` : html`
-              <a href="/login" style="color: white; text-decoration: none; font-weight: 500;">Login</a>
-              <a href="/register" style="color: white; text-decoration: none; font-weight: 500;">Register</a>
-            `}
-          </nav>
-        </div>
-      </header>
-      <main class="container">
-        ${children}
-      </main>
-    </body>
-  </html>
-`;
+        </header>
+        <main class="container">
+          {children}
+        </main>
+      </body>
+    </html>
+  </>
+);
