@@ -12,7 +12,12 @@ export async function handleSaveJob(c: Context) {
   }
 
   try {
-    const jobId = parseInt(c.req.param('id'), 10);
+    const idParam = c.req.param('id');
+    if (!idParam) {
+      return c.json({ error: 'Invalid job ID' }, 400);
+    }
+    
+    const jobId = parseInt(idParam, 10);
     
     if (isNaN(jobId) || jobId < 1) {
       return c.json({ error: 'Invalid job ID' }, 400);
@@ -20,7 +25,7 @@ export async function handleSaveJob(c: Context) {
 
     // Verify job exists
     const jobStmt = c.env.DB.prepare('SELECT id FROM jobs WHERE id = ? LIMIT 1').bind(jobId);
-    const job = await jobStmt.first<{ id: number }>();
+    const job = await jobStmt.first();
     
     if (!job) {
       return c.json({ error: 'Job not found' }, 404);
@@ -46,7 +51,12 @@ export async function handleRemoveJob(c: Context) {
   }
 
   try {
-    const jobId = parseInt(c.req.param('id'), 10);
+    const idParam = c.req.param('id');
+    if (!idParam) {
+      return c.json({ error: 'Invalid job ID' }, 400);
+    }
+    
+    const jobId = parseInt(idParam, 10);
     
     if (isNaN(jobId) || jobId < 1) {
       return c.json({ error: 'Invalid job ID' }, 400);
