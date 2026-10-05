@@ -2,6 +2,7 @@
 import { Hono } from 'hono';
 import { createPool, initSchema } from './db/client';
 import { JobRepository } from './repositories/JobRepository';
+import { ScraperService } from './scrapers/ScraperService';
 
 // Cloudflare environment bindings
 type Env = {
@@ -78,17 +79,49 @@ app.post('/admin/init-schema', async (c) => {
   }
 });
 
+// Manual scraper trigger (admin only)
+app.post('/admin/scrape', async (c) => {
+  try {
+    const pool = createPool(c.env.DATABASE_URL);
+    const scraperService = new ScraperService(pool);
+    
+    const result = await scraperService.runAll();
+    
+    return c.json({
+      status: 'ok',
+      result,
+    });
+  } catch (error) {
+    const err = error as Error;
+    return c.json({
+      status: 'error',
+      message: 'Scraper execution failed',
+      error: err.message,
+      timestamp: new Date().toISOString(),
+    }, 500);
+  }
+});
+
 // Scheduled handler for daily scraping
 export default {
   fetch: app.fetch,
   
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     console.log('Cron triggered:', event.scheduledTime);
-    // Scraper pipeline will be implemented in Phase 4
+    
     ctx.waitUntil(
-      Promise.resolve().then(() => {
-        console.log('Scraper not yet implemented (Phase 4)');
-      })
+      (async () => {
+        try {
+          const pool = createPool(env.DATABASE_URL);
+          const scraperService = new ScraperService(pool);
+          
+          const result = await scraperService.runAll();
+          
+          console.log('Scraper pipeline completed:', JSON.stringify(result.summary));
+        } catch (error) {
+          console.error('Scraper pipeline failed:', error);
+        }
+      })()
     );
   },
 };
