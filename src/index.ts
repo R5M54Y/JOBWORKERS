@@ -76,11 +76,13 @@ try {
   // Call internal API
   const apiUrl = `${new URL(c.req.url).origin}/api/jobs?${params.toString()}`;
   const response = await fetch(apiUrl);
-  const data = await response.json() as any;
 
   if (!response.ok) {
+    console.error(`API error: ${response.status}`, await response.text());
     return c.html(html`<div class="error-state">Unable to load jobs. Please try again.</div>`);
-    }
+  }
+
+  const data = await response.json() as any;
 
     // Fetch available categories
     const categoriesResult = await c.env.DB.prepare(
@@ -166,11 +168,12 @@ app.get('/saved-jobs', requireAuth, async (c) => {
       },
     });
 
-    const data = await response.json() as any;
-
     if (!response.ok) {
+      console.error(`Saved jobs API error: ${response.status}`, await response.text());
       return c.html(html`<div class="error-state">Unable to load saved jobs. Please try again.</div>`);
     }
+
+    const data = await response.json() as any;
 
     return c.html(
       SavedJobsView({
@@ -208,11 +211,12 @@ app.get('/applications', requireAuth, async (c) => {
       },
     });
 
-    const data = await response.json() as any;
-
     if (!response.ok) {
+      console.error(`Applications API error: ${response.status}`, await response.text());
       return c.html(html`<div class="error-state">Unable to load applications. Please try again.</div>`);
     }
+
+    const data = await response.json() as any;
 
     return c.html(
       ApplicationsView({
