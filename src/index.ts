@@ -328,7 +328,35 @@ app.post('/admin/scrape', async (c) => {
   }
 });
 
-// ===== AUTHENTICATION ENDPOINTS =====
+// ===== TEMPORARY DIAGNOSTIC ENDPOINT =====
+// TODO: Remove after diagnosis
+app.get('/diagnostic/test-pbkdf2', async (c) => {
+  try {
+    const { PasswordService } = await import('./services/PasswordService');
+    const passwordService = new PasswordService();
+    
+    console.error('Starting PBKDF2 test');
+    const hash = await passwordService.hashPassword('TestPassword123!');
+    console.error('PBKDF2 test success:', hash.substring(0, 30));
+    
+    return c.json({ 
+      success: true, 
+      hashPrefix: hash.substring(0, 50),
+      hashLength: hash.length 
+    });
+  } catch (error) {
+    const err = error as Error;
+    console.error('PBKDF2 test failed:', err);
+    return c.json({ 
+      success: false, 
+      error: err.message,
+      name: err.name,
+      stack: err.stack 
+    }, 500);
+  }
+});
+
+// ===== AUTHENTICATION ROUTES =====
 
 // Register
 app.post('/auth/register', async (c) => {

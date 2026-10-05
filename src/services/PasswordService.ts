@@ -2,7 +2,7 @@
 // PBKDF2-HMAC-SHA-256 password hashing with legacy SHA-256 migration support
 
 // PBKDF2 parameters
-const PBKDF2_ITERATIONS = 600000;
+const PBKDF2_ITERATIONS = 100000; // Cloudflare Workers maximum
 const PBKDF2_SALT_LENGTH = 16; // bytes
 const PBKDF2_KEY_LENGTH = 32; // 256 bits
 const PBKDF2_ALGORITHM = 'PBKDF2';
@@ -20,43 +20,57 @@ export class PasswordService {
    * Returns format: pbkdf2_sha256$600000$SALT_B64$HASH_B64
    */
   async hashPassword(password: string): Promise<string> {
-    // Generate random salt
-    const salt = new Uint8Array(PBKDF2_SALT_LENGTH);
-    crypto.getRandomValues(salt);
+    try {
+      console.error('hashPassword: Starting PBKDF2');
+      
+      // Generate random salt
+      const salt = new Uint8Array(PBKDF2_SALT_LENGTH);
+      crypto.getRandomValues(salt);
+      console.error('hashPassword: Salt generated');
 
-    // Encode password
-    const encoder = new TextEncoder();
-    const passwordData = encoder.encode(password);
+      // Encode password
+      const encoder = new TextEncoder();
+      const passwordData = encoder.encode(password);
+      console.error('hashPassword: Password encoded');
 
-    // Import password as PBKDF2 key
-    const key = await crypto.subtle.importKey(
-      'raw',
-      passwordData,
-      'PBKDF2',
-      false,
-      ['deriveBits']
-    );
+      // Import password as PBKDF2 key
+      const key = await crypto.subtle.importKey(
+        'raw',
+        passwordData,
+        'PBKDF2',
+        false,
+        ['deriveBits']
+      );
+      console.error('hashPassword: Key imported');
 
-    // Derive bits
-    const derivedBits = await crypto.subtle.deriveBits(
-      {
-        name: 'PBKDF2',
-        hash: PBKDF2_PRF,
-        salt: salt,
-        iterations: PBKDF2_ITERATIONS,
-      },
-      key,
-      PBKDF2_KEY_LENGTH * 8 // bits
-    );
+      // Derive bits
+      const derivedBits = await crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          hash: PBKDF2_PRF,
+          salt: salt,
+          iterations: PBKDF2_ITERATIONS,
+        },
+        key,
+        PBKDF2_KEY_LENGTH * 8 // bits
+      );
+      console.error('hashPassword: Bits derived');
 
-    const derivedBytes = new Uint8Array(derivedBits);
+      const derivedBytes = new Uint8Array(derivedBits);
 
-    // Encode salt and hash to base64
-    const saltB64 = this.bytesToBase64(salt);
-    const hashB64 = this.bytesToBase64(derivedBytes);
+      // Encode salt and hash to base64
+      const saltB64 = this.bytesToBase64(salt);
+      const hashB64 = this.bytesToBase64(derivedBytes);
+      console.error('hashPassword: Encoded to base64');
 
-    // Return formatted hash
-    return `${PBKDF2_FORMAT_PREFIX}$${PBKDF2_ITERATIONS}$${saltB64}$${hashB64}`;
+      // Return formatted hash
+      const result = `${PBKDF2_FORMAT_PREFIX}$${PBKDF2_ITERATIONS}$${saltB64}$${hashB64}`;
+      console.error('hashPassword: Success, hash length:', result.length);
+      return result;
+    } catch (error) {
+      console.error('hashPassword: FAILED', error);
+      throw error;
+    }
   }
 
   /**
