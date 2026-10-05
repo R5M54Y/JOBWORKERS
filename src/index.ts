@@ -1,8 +1,10 @@
 // JOBWORKERS - Cloudflare Workers Entry Point
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { initSchema } from './db/client';
 import { JobRepository } from './repositories/JobRepository';
 import { ScraperService } from './scrapers/ScraperService';
+import { handleListJobs, handleGetJob } from './routes/jobs';
 
 // Cloudflare environment bindings
 type Env = {
@@ -12,12 +14,21 @@ type Env = {
 
 const app = new Hono<{ Bindings: Env }>();
 
+// CORS middleware for public API
+app.use('/api/*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'OPTIONS'],
+  allowHeaders: ['Content-Type'],
+}));
+
 // Helper: verify admin token
 const verifyAdmin = (c: any): boolean => {
   const authHeader = c.req.header('Authorization');
   const expectedToken = `Bearer ${c.env.ADMIN_SECRET}`;
   return authHeader === expectedToken;
 };
+
+// ===== ROOT & HEALTH CHECKS =====
 
 // Health check
 app.get('/', (c) => {
@@ -66,6 +77,8 @@ app.get('/health/db', async (c) => {
     }, 500);
   }
 });
+
+// ===== ADMIN ENDPOINTS (PROTECTED) =====
 
 // Database schema initialization endpoint (admin only)
 app.post('/admin/init-schema', async (c) => {
@@ -118,7 +131,20 @@ app.post('/admin/scrape', async (c) => {
   }
 });
 
-// Scheduled handler for daily scraping
+// ===== PUBLIC API ENDPOINTS =====
+
+// List jobs with pagination, filtering, search, sorting
+app.get('/api/jobs', async (c) => {
+  return handleListJobs(c, c.env.DB);
+});
+
+// Get single job by ID
+app.get('/api/jobs/:id', async (c) => {
+  return handleGetJob(c, c.env.DB);
+});
+
+// ===== SCHEDULED HANDLER =====
+
 export default {
   fetch: app.fetch,
   

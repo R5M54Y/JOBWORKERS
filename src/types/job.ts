@@ -60,6 +60,8 @@ export interface ListJobsFilters {
   employment_type?: string;
   location?: string;
   status?: JobStatus;
+  search?: string;
+  sort?: 'latest' | 'oldest';
   limit?: number;
   offset?: number;
 }
