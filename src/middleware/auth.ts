@@ -70,15 +70,10 @@ export function setSessionCookie(c: Context, token: string): void {
   const maxAge = 30 * 24 * 60 * 60; // 30 days
   const secure = c.req.url.startsWith('https://') ? 'Secure; ' : '';
   
-  c.header(
-    'Set-Cookie',
-    `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; ` +
-    `Path=/; ` +
-    `HttpOnly; ` +
-    `${secure}` +
-    `SameSite=Lax; ` +
-    `Max-Age=${maxAge}`
-  );
+  const cookieValue = `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; ${secure}SameSite=Lax; Max-Age=${maxAge}`;
+  console.error('Setting cookie:', cookieValue.substring(0, 80));
+  
+  c.header('Set-Cookie', cookieValue);
 }
 
 // Helper: clear session cookie
