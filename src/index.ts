@@ -63,7 +63,7 @@ try {
 
   // Call jobs repository directly (avoid CORS issues)
   const repo = new JobRepository(c.env.DB);
-  const data = await repo.listJobs({
+  const jobs = await repo.listJobs({
     search,
     location,
     source,
@@ -75,6 +75,12 @@ try {
     offset: (page - 1) * limit,
   });
 
+  // Get total count for pagination
+  const countResult = await c.env.DB.prepare(
+    'SELECT COUNT(*) as total FROM jobs WHERE status = ?'
+  ).bind('active').first<{ total: number }>();
+  const total = countResult?.total || 0;
+
   // Fetch available categories
   const categoriesResult = await c.env.DB.prepare(
     'SELECT DISTINCT category FROM jobs WHERE category IS NOT NULL ORDER BY category'
@@ -83,12 +89,12 @@ try {
 
   return c.html(
     JobListView({
-      jobs: data.jobs || [],
+      jobs,
       pagination: {
         page,
         limit,
-        total: data.total || 0,
-        total_pages: Math.ceil((data.total || 0) / limit),
+        total,
+        total_pages: Math.ceil(total / limit),
       },
       filters: {
         search,
