@@ -15,15 +15,23 @@ export class UserRepository {
     ).bind(email, input.password_hash);
 
     const insertResult = await insertStmt.run();
-    if (!insertResult.success) throw new Error('Failed to create user');
+    if (!insertResult.success) {
+      console.error('User insert failed:', insertResult);
+      throw new Error('Failed to create user');
+    }
     
-    // Fetch the created user
+    console.error('Insert result:', insertResult.meta);
+    
+    // Fetch the created user using email (more reliable than last_row_id)
     const selectStmt = this.db.prepare(
-      'SELECT * FROM users WHERE id = ?'
-    ).bind(insertResult.meta.last_row_id);
+      'SELECT * FROM users WHERE email = ?'
+    ).bind(email);
     
     const result = await selectStmt.first<User>();
-    if (!result) throw new Error('Failed to retrieve created user');
+    if (!result) {
+      console.error('Failed to retrieve user after insert');
+      throw new Error('Failed to retrieve created user');
+    }
     return result;
   }
 

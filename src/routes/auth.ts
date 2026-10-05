@@ -22,6 +22,14 @@ export async function handleRegister(c: Context) {
   } catch (error) {
     const err = error as Error;
     
+    // Detailed error logging for diagnosis
+    console.error('=== REGISTRATION ERROR ===');
+    console.error('Error name:', err.name);
+    console.error('Error message:', err.message);
+    console.error('Error stack:', err.stack);
+    console.error('Error type:', typeof err);
+    console.error('Error constructor:', err.constructor.name);
+    
     if (err.message.includes('already registered')) {
       return c.json({ error: 'Email already registered' }, 409);
     }
@@ -30,7 +38,7 @@ export async function handleRegister(c: Context) {
       return c.json({ error: err.message }, 400);
     }
     
-    console.error('Registration error:', err);
+    console.error('Uncaught registration error:', err);
     return c.json({ error: 'Registration failed' }, 500);
   }
 }
