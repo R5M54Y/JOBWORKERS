@@ -18,6 +18,8 @@ import { RegisterView } from './views/Register';
 import { AccountView } from './views/Account';
 import { SavedJobsView } from './views/SavedJobs';
 import { ApplicationsView } from './views/Applications';
+import { SavedSearchesView } from './views/SavedSearches';
+import { AlertsView } from './views/Alerts';
 
 // Cloudflare environment bindings
 type Env = {
@@ -405,6 +407,59 @@ app.get('/api/applications/:id', async (c) => {
 // Update application status
 app.patch('/api/applications/:id', async (c) => {
   return handleUpdateApplicationStatus(c);
+});
+
+// ===== FRONTEND ROUTES (AUTHENTICATED) =====
+
+// Saved searches page
+app.get('/saved-searches', async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.redirect('/login');
+  }
+
+  try {
+    const { SavedSearchRepository } = await import('./repositories/SavedSearchRepository');
+    const repo = new SavedSearchRepository(c.env.DB);
+    
+    const searches = await repo.listSavedSearchesByUser(user.id);
+    
+    // Get unread alert counts per search
+    const unreadCounts: Record<number, number> = {};
+    for (const search of searches) {
+      const count = await repo.countUnreadAlertsByUser(user.id);
+      unreadCounts[search.id] = count;
+    }
+
+    return c.html(SavedSearchesView({ searches, unreadAlertCounts, user }));
+  } catch (error) {
+    console.error('Failed to load saved searches:', error);
+    return c.html(html`<div class="error-state">Failed to load saved searches</div>`);
+  }
+});
+
+// Alerts page
+app.get('/alerts', async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.redirect('/login');
+  }
+
+  try {
+    const { SavedSearchRepository } = await import('./repositories/SavedSearchRepository');
+    const repo = new SavedSearchRepository(c.env.DB);
+    
+    const unreadParam = c.req.query('unread');
+    const unreadOnly = unreadParam === 'true';
+    
+    const alerts = await repo.getJobAlertsByUser(user.id, unreadOnly);
+    const unreadCount = await repo.countUnreadAlertsByUser(user.id);
+
+    return c.html(AlertsView({ alerts, unreadCount, user }));
+  } catch (error) {
+    console.error('Failed to load alerts:', error);
+    return c.html(html`<div class="error-state">Failed to load alerts</div>`);
+  }
 });
 
 // ===== SAVED SEARCH ENDPOINTS =====
