@@ -1,10 +1,13 @@
 // JOBWORKERS - Cloudflare Workers Entry Point
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { html } from 'hono/html';
 import { initSchema } from './db/client';
 import { JobRepository } from './repositories/JobRepository';
 import { ScraperService } from './scrapers/ScraperService';
 import { handleListJobs, handleGetJob } from './routes/jobs';
+import { JobListView } from './views/JobList';
+import { JobDetailView } from './views/JobDetail';
 
 // Cloudflare environment bindings
 type Env = {
@@ -28,18 +31,84 @@ const verifyAdmin = (c: any): boolean => {
   return authHeader === expectedToken;
 };
 
-// ===== ROOT & HEALTH CHECKS =====
+// ===== FRONTEND ROUTES =====
 
-// Health check
-app.get('/', (c) => {
-  return c.json({
-    status: 'ok',
-    service: 'JOBWORKERS',
-    runtime: 'Cloudflare Workers',
-    database: 'D1',
-    timestamp: new Date().toISOString(),
-  });
+// Job Explorer - Main page
+app.get('/', async (c) => {
+  try {
+    const page = parseInt(c.req.query('page') || '1', 10);
+    const limit = 20;
+    const search = c.req.query('search');
+    const location = c.req.query('location');
+    const source = c.req.query('source');
+    const job_type = c.req.query('job_type');
+    const category = c.req.query('category');
+    const sort = c.req.query('sort') || 'latest';
+
+    // Build query string for API
+    const params = new URLSearchParams();
+    params.set('page', page.toString());
+    params.set('limit', limit.toString());
+    if (search) params.set('search', search);
+    if (location) params.set('location', location);
+    if (source) params.set('source', source);
+    if (job_type) params.set('job_type', job_type);
+    if (category) params.set('category', category);
+    if (sort) params.set('sort', sort);
+
+    // Call internal API
+    const apiUrl = `${new URL(c.req.url).origin}/api/jobs?${params.toString()}`;
+    const response = await fetch(apiUrl);
+    const data = await response.json() as any;
+
+    if (!response.ok) {
+      return c.html(html`<div class="error-state">Unable to load jobs. Please try again.</div>`);
+    }
+
+    return c.html(
+      JobListView({
+        jobs: data.data || [],
+        pagination: data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 },
+        filters: { search, location, source, job_type, category, sort },
+      })
+    );
+  } catch (error) {
+    console.error('Error rendering job list:', error);
+    return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
+  }
 });
+
+// Job Detail page
+app.get('/jobs/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    // Call internal API
+    const apiUrl = `${new URL(c.req.url).origin}/api/jobs/${id}`;
+    const response = await fetch(apiUrl);
+    
+    if (response.status === 404) {
+      return c.html(html`<div class="error-state">Job not found</div>`, 404);
+    }
+    
+    if (!response.ok) {
+      return c.html(html`<div class="error-state">Unable to load job. Please try again.</div>`);
+    }
+
+    const data = await response.json() as any;
+
+    return c.html(
+      JobDetailView({
+        job: data.data,
+      })
+    );
+  } catch (error) {
+    console.error('Error rendering job detail:', error);
+    return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
+  }
+});
+
+// ===== ROOT & HEALTH CHECKS =====
 
 // Health check: API
 app.get('/health', (c) => {
