@@ -143,7 +143,7 @@ export const JobListView = ({ jobs, pagination, filters, availableCategories = [
             </div>
           </div>
         </a>
-      `).join('')}
+      `)}
       
       ${totalPages > 1 ? html`
         <div class="pagination">
