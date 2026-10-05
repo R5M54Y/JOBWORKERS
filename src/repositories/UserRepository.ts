@@ -9,12 +9,21 @@ export class UserRepository {
   async createUser(input: { email: string; password_hash: string }): Promise<User> {
     const email = input.email.toLowerCase().trim();
     
-    const stmt = this.db.prepare(
-      `INSERT INTO users (email, password_hash) VALUES (?, ?) RETURNING *`
+    // Insert user
+    const insertStmt = this.db.prepare(
+      `INSERT INTO users (email, password_hash) VALUES (?, ?)`
     ).bind(email, input.password_hash);
 
-    const result = await stmt.first<User>();
-    if (!result) throw new Error('Failed to create user');
+    const insertResult = await insertStmt.run();
+    if (!insertResult.success) throw new Error('Failed to create user');
+    
+    // Fetch the created user
+    const selectStmt = this.db.prepare(
+      'SELECT * FROM users WHERE id = ?'
+    ).bind(insertResult.meta.last_row_id);
+    
+    const result = await selectStmt.first<User>();
+    if (!result) throw new Error('Failed to retrieve created user');
     return result;
   }
 
