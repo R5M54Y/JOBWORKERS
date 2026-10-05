@@ -7,12 +7,14 @@ import { JobRepository } from './repositories/JobRepository';
 import { ScraperService } from './scrapers/ScraperService';
 import { handleListJobs, handleGetJob } from './routes/jobs';
 import { handleRegister, handleLogin, handleLogout, handleMe } from './routes/auth';
+import { handleSaveJob, handleRemoveJob, handleListSavedJobs } from './routes/savedJobs';
 import { authMiddleware, requireAuth } from './middleware/auth';
 import { JobListView } from './views/JobList';
 import { JobDetailView } from './views/JobDetail';
 import { LoginView } from './views/Login';
 import { RegisterView } from './views/Register';
 import { AccountView } from './views/Account';
+import { SavedJobsView } from './views/SavedJobs';
 
 // Cloudflare environment bindings
 type Env = {
@@ -116,6 +118,48 @@ app.get('/account', requireAuth, async (c) => {
   }
   
   return c.html(AccountView({ user }));
+});
+
+// Saved jobs page (protected)
+app.get('/saved-jobs', requireAuth, async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.redirect('/login');
+  }
+
+  try {
+    const page = parseInt(c.req.query('page') || '1', 10);
+    const limit = 20;
+
+    if (page < 1) {
+      return c.redirect('/saved-jobs');
+    }
+
+    // Call internal API
+    const apiUrl = `${new URL(c.req.url).origin}/api/saved-jobs?page=${page}&limit=${limit}`;
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Cookie': c.req.header('cookie') || '',
+      },
+    });
+
+    const data = await response.json() as any;
+
+    if (!response.ok) {
+      return c.html(html`<div class="error-state">Unable to load saved jobs. Please try again.</div>`);
+    }
+
+    return c.html(
+      SavedJobsView({
+        jobs: data.data || [],
+        pagination: data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 },
+        user,
+      })
+    );
+  } catch (error) {
+    console.error('Error rendering saved jobs:', error);
+    return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
+  }
 });
 
 // Job Detail page
@@ -260,6 +304,23 @@ app.post('/auth/logout', async (c) => {
 // Get current user
 app.get('/auth/me', async (c) => {
   return handleMe(c);
+});
+
+// ===== SAVED JOBS ENDPOINTS =====
+
+// Save a job
+app.post('/api/jobs/:id/save', async (c) => {
+  return handleSaveJob(c);
+});
+
+// Remove a saved job
+app.delete('/api/jobs/:id/save', async (c) => {
+  return handleRemoveJob(c);
+});
+
+// List saved jobs for authenticated user
+app.get('/api/saved-jobs', async (c) => {
+  return handleListSavedJobs(c);
 });
 
 // ===== PUBLIC API ENDPOINTS =====
