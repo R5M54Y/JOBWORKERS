@@ -1,8 +1,9 @@
 // JOBWORKERS Authentication Service
-// Password hashing and session management using Web Crypto API
+// Session management and user authentication using PBKDF2 password hashing
 
 import { UserRepository } from '../repositories/UserRepository';
 import { SessionRepository } from '../repositories/SessionRepository';
+import { PasswordService } from './PasswordService';
 import type { RegisterInput, LoginInput, SafeUser } from '../types/auth';
 
 // Session lifetime: 30 days
@@ -11,26 +12,12 @@ const SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 export class AuthService {
   private userRepo: UserRepository;
   private sessionRepo: SessionRepository;
+  private passwordService: PasswordService;
 
   constructor(db: D1Database) {
     this.userRepo = new UserRepository(db);
     this.sessionRepo = new SessionRepository(db);
-  }
-
-  // Hash password using Web Crypto API (SHA-256 for simplicity in Workers)
-  // NOTE: In production, consider using a more robust solution like bcrypt
-  // via a WASM module if available, or a service-based approach
-  async hashPassword(password: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  async verifyPassword(password: string, hash: string): Promise<boolean> {
-    const computed = await this.hashPassword(password);
-    return computed === hash;
+    this.passwordService = new PasswordService();
   }
 
   // Generate cryptographically secure random token
@@ -64,8 +51,8 @@ export class AuthService {
       throw new Error('Email already registered');
     }
 
-    // Hash password
-    const password_hash = await this.hashPassword(input.password);
+    // Hash password using PBKDF2
+    const password_hash = await this.passwordService.hashPassword(input.password);
 
     // Create user
     const user = await this.userRepo.createUser({ email, password: input.password, password_hash });
@@ -94,9 +81,18 @@ export class AuthService {
       throw invalidError;
     }
 
-    const valid = await this.verifyPassword(input.password, user.password_hash);
+    const { valid, needsRehash } = await this.passwordService.verifyPassword(
+      input.password,
+      user.password_hash
+    );
     if (!valid) {
       throw invalidError;
+    }
+
+    // Opportunistic rehashing: if legacy hash was valid, rehash with PBKDF2
+    if (needsRehash) {
+      const newPasswordHash = await this.passwordService.hashPassword(input.password);
+      await this.userRepo.updatePasswordHash(user.id, newPasswordHash);
     }
 
     // Create session

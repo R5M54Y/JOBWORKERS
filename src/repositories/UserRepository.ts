@@ -36,4 +36,12 @@ export class UserRepository {
       created_at: user.created_at,
     };
   }
+
+  async updatePasswordHash(id: number, passwordHash: string): Promise<void> {
+    const stmt = this.db.prepare(
+      'UPDATE users SET password_hash = ?, updated_at = datetime("now") WHERE id = ?'
+    ).bind(passwordHash, id);
+    
+    await stmt.run();
+  }
 }
