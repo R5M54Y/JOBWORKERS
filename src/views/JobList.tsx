@@ -20,7 +20,9 @@ interface JobListProps {
     job_type?: string;
     category?: string;
     sort?: string;
+    remote?: boolean;
   };
+  availableCategories?: string[];
 }
 
 function truncate(text: string, maxLength: number): string {
@@ -41,7 +43,7 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString();
 }
 
-export const JobListView = ({ jobs, pagination, filters }: JobListProps) => {
+export const JobListView = ({ jobs, pagination, filters, availableCategories = [] }: JobListProps) => {
   const currentPage = pagination.page;
   const totalPages = pagination.total_pages;
   
@@ -76,18 +78,30 @@ export const JobListView = ({ jobs, pagination, filters }: JobListProps) => {
           
           <select name="source" class="filter-select" onchange="this.form.submit()">
             <option value="">All Sources</option>
-            <option value="remoteok" ${filters.source === 'remoteok' ? 'selected' : ''}>RemoteOK</option>
-            <option value="remotive" ${filters.source === 'remotive' ? 'selected' : ''}>Remotive</option>
             <option value="jobicy" ${filters.source === 'jobicy' ? 'selected' : ''}>Jobicy</option>
+            <option value="remotive" ${filters.source === 'remotive' ? 'selected' : ''}>Remotive</option>
           </select>
           
           <select name="job_type" class="filter-select" onchange="this.form.submit()">
-            <option value="">All Job Types</option>
-            <option value="full-time" ${filters.job_type === 'full-time' ? 'selected' : ''}>Full-time</option>
+            <option value="">All Employment Types</option>
+            <option value="full_time" ${filters.job_type === 'full_time' ? 'selected' : ''}>Full-time</option>
             <option value="part-time" ${filters.job_type === 'part-time' ? 'selected' : ''}>Part-time</option>
+            <option value="part_time" ${filters.job_type === 'part_time' ? 'selected' : ''}>Part-time (alt)</option>
             <option value="contract" ${filters.job_type === 'contract' ? 'selected' : ''}>Contract</option>
             <option value="freelance" ${filters.job_type === 'freelance' ? 'selected' : ''}>Freelance</option>
           </select>
+          
+          <select name="category" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            ${availableCategories.map((cat: string) => html`
+              <option value="${cat}" ${filters.category === cat ? 'selected' : ''}>${cat}</option>
+            `).join('')}
+          </select>
+          
+          <label style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+            <input type="checkbox" name="remote" value="true" ${filters.remote ? 'checked' : ''} onchange="this.form.submit()" />
+            Remote Only
+          </label>
           
           <select name="sort" class="filter-select" onchange="this.form.submit()">
             <option value="latest" ${!filters.sort || filters.sort === 'latest' ? 'selected' : ''}>Latest First</option>
@@ -136,6 +150,8 @@ export const JobListView = ({ jobs, pagination, filters }: JobListProps) => {
             ${filters.location ? html`<input type="hidden" name="location" value="${filters.location}" />` : ''}
             ${filters.source ? html`<input type="hidden" name="source" value="${filters.source}" />` : ''}
             ${filters.job_type ? html`<input type="hidden" name="job_type" value="${filters.job_type}" />` : ''}
+            ${filters.category ? html`<input type="hidden" name="category" value="${filters.category}" />` : ''}
+            ${filters.remote ? html`<input type="hidden" name="remote" value="true" />` : ''}
             ${filters.sort ? html`<input type="hidden" name="sort" value="${filters.sort}" />` : ''}
             
             <button 

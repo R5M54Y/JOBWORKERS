@@ -43,6 +43,7 @@ export async function handleListJobs(c: Context, db: D1Database) {
     const jobType = c.req.query('job_type');
     const category = c.req.query('category');
     const search = c.req.query('search');
+    const remote = c.req.query('remote');
 
     const pageValidation = validatePage(pageParam);
     if (!pageValidation.valid) {
@@ -65,7 +66,7 @@ export async function handleListJobs(c: Context, db: D1Database) {
     const offset = (page - 1) * limit;
 
     // Build filters
-    const filters: ListJobsFilters & { search?: string; sort?: 'latest' | 'oldest' } = {
+    const filters: ListJobsFilters & { search?: string; sort?: 'latest' | 'oldest'; remote?: boolean } = {
       limit,
       offset,
     };
@@ -76,14 +77,12 @@ export async function handleListJobs(c: Context, db: D1Database) {
     if (category) filters.category = category;
     if (search) filters.search = search;
     if (sort) filters.sort = sort;
+    if (remote === 'true') filters.remote = true;
 
     const repository = new JobRepository(db);
 
-    // Get total count
-    const totalResult = await db
-      .prepare('SELECT COUNT(*) as count FROM jobs')
-      .first<{ count: number }>();
-    const total = totalResult?.count || 0;
+    // Get total count with filters applied
+    const total = await getFilteredJobCount(db, filters);
 
     // Get paginated jobs with filters and search
     const jobs = await listJobsWithSearch(db, filters);
@@ -134,11 +133,8 @@ export async function handleGetJob(c: Context, db: D1Database) {
   }
 }
 
-// Helper: List jobs with advanced filtering and search
-async function listJobsWithSearch(
-  db: D1Database,
-  filters: ListJobsFilters & { search?: string; sort?: 'latest' | 'oldest' }
-): Promise<any[]> {
+// Helper: Build WHERE conditions for filtering
+function buildFilterConditions(filters: ListJobsFilters & { search?: string; remote?: boolean }): { whereClause: string; params: any[] } {
   const conditions: string[] = [];
   const params: any[] = [];
 
@@ -167,6 +163,12 @@ async function listJobsWithSearch(
     params.push(filters.status);
   }
 
+  // Remote filter: job is remote if location contains "remote" (case-insensitive)
+  if (filters.remote === true) {
+    conditions.push('LOWER(location) LIKE ?');
+    params.push('%remote%');
+  }
+
   // Full-text search on title, company, description
   if (filters.search) {
     const searchTerm = `%${filters.search}%`;
@@ -175,6 +177,27 @@ async function listJobsWithSearch(
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  return { whereClause, params };
+}
+
+// Helper: Get total count with filters
+async function getFilteredJobCount(
+  db: D1Database,
+  filters: ListJobsFilters & { search?: string; remote?: boolean }
+): Promise<number> {
+  const { whereClause, params } = buildFilterConditions(filters);
+  const stmt = db.prepare(`SELECT COUNT(*) as count FROM jobs ${whereClause}`).bind(...params);
+  const result = await stmt.first<{ count: number }>();
+  return result?.count || 0;
+}
+
+// Helper: List jobs with advanced filtering and search
+async function listJobsWithSearch(
+  db: D1Database,
+  filters: ListJobsFilters & { search?: string; sort?: 'latest' | 'oldest'; remote?: boolean }
+): Promise<any[]> {
+  const { whereClause, params } = buildFilterConditions(filters);
+
   const orderClause =
     filters.sort === 'oldest'
       ? 'ORDER BY created_at ASC'

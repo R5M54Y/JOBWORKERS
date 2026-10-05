@@ -47,41 +47,58 @@ const verifyAdmin = (c: any): boolean => {
 
 // Job Explorer - Main page (public)
 app.get('/', async (c) => {
-  try {
-    const page = parseInt(c.req.query('page') || '1', 10);
-    const limit = 20;
-    const search = c.req.query('search');
-    const location = c.req.query('location');
-    const source = c.req.query('source');
-    const job_type = c.req.query('job_type');
-    const category = c.req.query('category');
-    const sort = c.req.query('sort') || 'latest';
+try {
+  const page = parseInt(c.req.query('page') || '1', 10);
+  const limit = 20;
+  const search = c.req.query('search');
+  const location = c.req.query('location');
+  const source = c.req.query('source');
+  const job_type = c.req.query('job_type');
+  const category = c.req.query('category');
+  const remote = c.req.query('remote');
+  const sort = c.req.query('sort') || 'latest';
 
-    // Build query string for API
-    const params = new URLSearchParams();
-    params.set('page', page.toString());
-    params.set('limit', limit.toString());
-    if (search) params.set('search', search);
-    if (location) params.set('location', location);
-    if (source) params.set('source', source);
-    if (job_type) params.set('job_type', job_type);
-    if (category) params.set('category', category);
-    if (sort) params.set('sort', sort);
+  // Build query string for API
+  const params = new URLSearchParams();
+  params.set('page', page.toString());
+  params.set('limit', limit.toString());
+  if (search) params.set('search', search);
+  if (location) params.set('location', location);
+  if (source) params.set('source', source);
+  if (job_type) params.set('job_type', job_type);
+  if (category) params.set('category', category);
+  if (remote) params.set('remote', remote);
+  if (sort) params.set('sort', sort);
 
-    // Call internal API
-    const apiUrl = `${new URL(c.req.url).origin}/api/jobs?${params.toString()}`;
-    const response = await fetch(apiUrl);
-    const data = await response.json() as any;
+  // Call internal API
+  const apiUrl = `${new URL(c.req.url).origin}/api/jobs?${params.toString()}`;
+  const response = await fetch(apiUrl);
+  const data = await response.json() as any;
 
-    if (!response.ok) {
-      return c.html(html`<div class="error-state">Unable to load jobs. Please try again.</div>`);
+  if (!response.ok) {
+    return c.html(html`<div class="error-state">Unable to load jobs. Please try again.</div>`);
     }
+
+    // Fetch available categories
+    const categoriesResult = await c.env.DB.prepare(
+      'SELECT DISTINCT category FROM jobs WHERE category IS NOT NULL ORDER BY category'
+    ).all();
+    const availableCategories: string[] = (categoriesResult.results || []).map((r: any) => r.category);
 
     return c.html(
       JobListView({
         jobs: data.data || [],
         pagination: data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 },
-        filters: { search, location, source, job_type, category, sort },
+        filters: {
+          search,
+          location,
+          source,
+          job_type,
+          category,
+          remote: remote === 'true',
+          sort,
+        },
+        availableCategories,
       })
     );
   } catch (error) {
