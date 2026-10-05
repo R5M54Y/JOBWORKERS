@@ -431,7 +431,7 @@ app.get('/saved-searches', async (c) => {
       unreadCounts[search.id] = count;
     }
 
-    return c.html(SavedSearchesView({ searches, unreadAlertCounts, user }));
+    return c.html(SavedSearchesView({ searches, unreadAlertCounts: unreadCounts, user }));
   } catch (error) {
     console.error('Failed to load saved searches:', error);
     return c.html(html`<div class="error-state">Failed to load saved searches</div>`);
