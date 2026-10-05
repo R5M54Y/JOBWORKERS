@@ -55,7 +55,7 @@ export class AuthService {
     const password_hash = await this.passwordService.hashPassword(input.password);
 
     // Create user
-    const user = await this.userRepo.createUser({ email, password: input.password, password_hash });
+    const user = await this.userRepo.createUser({ email, password_hash });
 
     // Create session
     const token = this.generateToken();

@@ -6,7 +6,7 @@ import type { User, SafeUser, RegisterInput } from '../types/auth';
 export class UserRepository {
   constructor(private db: D1Database) {}
 
-  async createUser(input: RegisterInput & { password_hash: string }): Promise<User> {
+  async createUser(input: { email: string; password_hash: string }): Promise<User> {
     const email = input.email.toLowerCase().trim();
     
     const stmt = this.db.prepare(
