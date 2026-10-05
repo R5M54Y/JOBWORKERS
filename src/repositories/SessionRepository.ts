@@ -7,14 +7,22 @@ export class SessionRepository {
   constructor(private db: D1Database) {}
 
   async createSession(userId: number, tokenHash: string, expiresAt: Date): Promise<Session> {
-    const stmt = this.db.prepare(
+    // Insert session
+    const insertStmt = this.db.prepare(
       `INSERT INTO sessions (user_id, token_hash, expires_at) 
-       VALUES (?, ?, ?) 
-       RETURNING *`
+       VALUES (?, ?, ?)`
     ).bind(userId, tokenHash, expiresAt.toISOString());
 
-    const result = await stmt.first<Session>();
-    if (!result) throw new Error('Failed to create session');
+    const insertResult = await insertStmt.run();
+    if (!insertResult.success) throw new Error('Failed to create session');
+    
+    // Fetch the created session
+    const selectStmt = this.db.prepare(
+      'SELECT * FROM sessions WHERE id = ?'
+    ).bind(insertResult.meta.last_row_id);
+    
+    const result = await selectStmt.first<Session>();
+    if (!result) throw new Error('Failed to retrieve created session');
     return result;
   }
 
