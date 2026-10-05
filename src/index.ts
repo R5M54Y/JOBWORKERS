@@ -6,8 +6,13 @@ import { initSchema } from './db/client';
 import { JobRepository } from './repositories/JobRepository';
 import { ScraperService } from './scrapers/ScraperService';
 import { handleListJobs, handleGetJob } from './routes/jobs';
+import { handleRegister, handleLogin, handleLogout, handleMe } from './routes/auth';
+import { authMiddleware, requireAuth } from './middleware/auth';
 import { JobListView } from './views/JobList';
 import { JobDetailView } from './views/JobDetail';
+import { LoginView } from './views/Login';
+import { RegisterView } from './views/Register';
+import { AccountView } from './views/Account';
 
 // Cloudflare environment bindings
 type Env = {
@@ -16,6 +21,9 @@ type Env = {
 };
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Auth middleware (runs on all requests)
+app.use('*', authMiddleware);
 
 // CORS middleware for public API
 app.use('/api/*', cors({
@@ -33,7 +41,7 @@ const verifyAdmin = (c: any): boolean => {
 
 // ===== FRONTEND ROUTES =====
 
-// Job Explorer - Main page
+// Job Explorer - Main page (public)
 app.get('/', async (c) => {
   try {
     const page = parseInt(c.req.query('page') || '1', 10);
@@ -76,6 +84,38 @@ app.get('/', async (c) => {
     console.error('Error rendering job list:', error);
     return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
   }
+});
+
+// Login page
+app.get('/login', (c) => {
+  const user = c.get('user');
+  if (user) {
+    return c.redirect('/account');
+  }
+  
+  const error = c.req.query('error');
+  return c.html(LoginView({ error }));
+});
+
+// Register page
+app.get('/register', (c) => {
+  const user = c.get('user');
+  if (user) {
+    return c.redirect('/account');
+  }
+  
+  const error = c.req.query('error');
+  return c.html(RegisterView({ error }));
+});
+
+// Account page (protected)
+app.get('/account', requireAuth, async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.redirect('/login');
+  }
+  
+  return c.html(AccountView({ user }));
 });
 
 // Job Detail page
@@ -198,6 +238,28 @@ app.post('/admin/scrape', async (c) => {
       timestamp: new Date().toISOString(),
     }, 500);
   }
+});
+
+// ===== AUTHENTICATION ENDPOINTS =====
+
+// Register
+app.post('/auth/register', async (c) => {
+  return handleRegister(c);
+});
+
+// Login
+app.post('/auth/login', async (c) => {
+  return handleLogin(c);
+});
+
+// Logout
+app.post('/auth/logout', async (c) => {
+  return handleLogout(c);
+});
+
+// Get current user
+app.get('/auth/me', async (c) => {
+  return handleMe(c);
 });
 
 // ===== PUBLIC API ENDPOINTS =====
