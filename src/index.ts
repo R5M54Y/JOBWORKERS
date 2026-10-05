@@ -102,6 +102,7 @@ try {
           sort,
         },
         availableCategories,
+        user: c.get('user'),
       })
     );
   } catch (error) {
@@ -139,7 +140,7 @@ app.get('/account', requireAuth, async (c) => {
     return c.redirect('/login');
   }
   
-  return c.html(AccountView({ user }));
+  return c.html(AccountView({ user, userFromLayout: user }));
 });
 
 // Saved jobs page (protected)

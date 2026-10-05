@@ -6,9 +6,10 @@ import { html } from 'hono/html';
 interface LayoutProps {
   title: string;
   children: any;
+  user?: any;
 }
 
-export const Layout = ({ title, children }: LayoutProps) => html`
+export const Layout = ({ title, children, user }: LayoutProps) => html`
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -339,9 +340,24 @@ export const Layout = ({ title, children }: LayoutProps) => html`
     </head>
     <body>
       <header>
-        <div class="container">
-          <h1>JOBWORKERS</h1>
-          <p>Remote job opportunities aggregated from top sources</p>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1>JOBWORKERS</h1>
+            <p>Remote job opportunities aggregated from top sources</p>
+          </div>
+          <nav style="display: flex; gap: 1.5rem; align-items: center; font-size: 0.875rem;">
+            <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Jobs</a>
+            ${user ? html`
+              <a href="/saved-searches" style="color: white; text-decoration: none; font-weight: 500;">Saved Searches</a>
+              <a href="/alerts" style="color: white; text-decoration: none; font-weight: 500;">Alerts</a>
+              <a href="/saved-jobs" style="color: white; text-decoration: none; font-weight: 500;">Saved Jobs</a>
+              <a href="/applications" style="color: white; text-decoration: none; font-weight: 500;">Applications</a>
+              <a href="/account" style="color: white; text-decoration: none; font-weight: 500;">Account</a>
+            ` : html`
+              <a href="/login" style="color: white; text-decoration: none; font-weight: 500;">Login</a>
+              <a href="/register" style="color: white; text-decoration: none; font-weight: 500;">Register</a>
+            `}
+          </nav>
         </div>
       </header>
       <main class="container">
