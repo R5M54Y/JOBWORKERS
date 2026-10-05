@@ -1,35 +1,22 @@
 // JOBWORKERS Database Client
-// Neon Postgres HTTP-compatible client for Cloudflare Workers
+// Cloudflare D1 client for Workers
 
-import { neonConfig, Pool } from '@neondatabase/serverless';
-
-// Configure Neon for Cloudflare Workers (fetch-based)
-neonConfig.fetchConnectionCache = true;
-
-export function createPool(databaseUrl: string): Pool {
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL is required');
-  }
-  
-  return new Pool({ connectionString: databaseUrl });
-}
-
-export async function initSchema(pool: Pool): Promise<void> {
+export async function initSchema(db: D1Database): Promise<void> {
   const schema = `
     -- Users table
     CREATE TABLE IF NOT EXISTS users (
-      id BIGSERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
       name TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
     -- Jobs table
     CREATE TABLE IF NOT EXISTS jobs (
-      id BIGSERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       source TEXT NOT NULL,
       source_job_id TEXT NOT NULL,
       title TEXT NOT NULL,
@@ -42,10 +29,10 @@ export async function initSchema(pool: Pool): Promise<void> {
       salary_min INTEGER,
       salary_max INTEGER,
       status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'expired')),
-      posted_at TIMESTAMPTZ DEFAULT NOW(),
-      expires_at TIMESTAMPTZ,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      posted_at TEXT DEFAULT (datetime('now')),
+      expires_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(source, source_job_id)
     );
 
@@ -58,14 +45,14 @@ export async function initSchema(pool: Pool): Promise<void> {
 
     -- Job applications table
     CREATE TABLE IF NOT EXISTS job_applications (
-      id BIGSERIAL PRIMARY KEY,
-      job_id BIGINT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
-      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'accepted', 'rejected')),
       cover_letter TEXT,
       resume_url TEXT,
-      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      applied_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(job_id, user_id)
     );
 
@@ -75,5 +62,6 @@ export async function initSchema(pool: Pool): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_job_applications_applied_at ON job_applications(applied_at DESC);
   `;
 
-  await pool.query(schema);
+  // Execute schema as batch (D1 supports multiple statements)
+  await db.exec(schema);
 }

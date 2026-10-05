@@ -1,12 +1,12 @@
 // JOBWORKERS - Cloudflare Workers Entry Point
 import { Hono } from 'hono';
-import { createPool, initSchema } from './db/client';
+import { initSchema } from './db/client';
 import { JobRepository } from './repositories/JobRepository';
 import { ScraperService } from './scrapers/ScraperService';
 
 // Cloudflare environment bindings
 type Env = {
-  DATABASE_URL: string;
+  DB: D1Database;
   ADMIN_SECRET: string;
 };
 
@@ -25,6 +25,7 @@ app.get('/', (c) => {
     status: 'ok',
     service: 'JOBWORKERS',
     runtime: 'Cloudflare Workers',
+    database: 'D1',
     timestamp: new Date().toISOString(),
   });
 });
@@ -40,13 +41,14 @@ app.get('/health', (c) => {
 // Health check: Database connectivity
 app.get('/health/db', async (c) => {
   try {
-    const pool = createPool(c.env.DATABASE_URL);
-    const result = await pool.query('SELECT 1 as health');
+    const stmt = c.env.DB.prepare('SELECT 1 as health');
+    const result = await stmt.first<{ health: number }>();
     
-    if (result.rows[0]?.health === 1) {
+    if (result?.health === 1) {
       return c.json({
         status: 'ok',
         database: 'connected',
+        type: 'D1',
         timestamp: new Date().toISOString(),
       });
     }
@@ -72,8 +74,7 @@ app.post('/admin/init-schema', async (c) => {
   }
 
   try {
-    const pool = createPool(c.env.DATABASE_URL);
-    await initSchema(pool);
+    await initSchema(c.env.DB);
     
     return c.json({
       status: 'ok',
@@ -98,8 +99,7 @@ app.post('/admin/scrape', async (c) => {
   }
 
   try {
-    const pool = createPool(c.env.DATABASE_URL);
-    const scraperService = new ScraperService(pool);
+    const scraperService = new ScraperService(c.env.DB);
     
     const result = await scraperService.runAll();
     
@@ -128,8 +128,7 @@ export default {
     ctx.waitUntil(
       (async () => {
         try {
-          const pool = createPool(env.DATABASE_URL);
-          const scraperService = new ScraperService(pool);
+          const scraperService = new ScraperService(env.DB);
           
           const result = await scraperService.runAll();
           

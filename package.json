@@ -10,7 +10,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.2.0",
     "hono": "^4.6.3"
   },
   "devDependencies": {

@@ -7,7 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 [triggers]
 crons = ["0 0 * * *"]
 
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "jobworkers-db"
+database_id = "PLACEHOLDER_SET_AFTER_WRANGLER_D1_CREATE"
+
 # Environment variables (secrets via wrangler secret put)
 [vars]
 # ADMIN_SECRET set via: wrangler secret put ADMIN_SECRET
-# DATABASE_URL set via: wrangler secret put DATABASE_URL

@@ -1,7 +1,6 @@
 // JOBWORKERS Scraper Service
 // Orchestrates multiple job scrapers with provider isolation
 
-import { Pool } from '@neondatabase/serverless';
 import { IJobScraper, ScraperResult, PipelineResult, NormalizedJob } from './types';
 import { RemoteOKScraper } from './RemoteOKScraper';
 import { RemotiveScraper } from './RemotiveScraper';
@@ -13,13 +12,13 @@ export class ScraperService {
   private scrapers: IJobScraper[];
   private repository: JobRepository;
 
-  constructor(pool: Pool) {
+  constructor(db: D1Database) {
     this.scrapers = [
       new RemoteOKScraper(),
       new RemotiveScraper(),
       new JobicyScraper(),
     ];
-    this.repository = new JobRepository(pool);
+    this.repository = new JobRepository(db);
   }
 
   async runAll(): Promise<PipelineResult> {
