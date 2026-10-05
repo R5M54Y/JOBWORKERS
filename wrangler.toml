@@ -9,4 +9,5 @@ crons = ["0 0 * * *"]
 
 # Environment variables (secrets via wrangler secret put)
 [vars]
+# ADMIN_SECRET set via: wrangler secret put ADMIN_SECRET
 # DATABASE_URL set via: wrangler secret put DATABASE_URL

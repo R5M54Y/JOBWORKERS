@@ -7,9 +7,17 @@ import { ScraperService } from './scrapers/ScraperService';
 // Cloudflare environment bindings
 type Env = {
   DATABASE_URL: string;
+  ADMIN_SECRET: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Helper: verify admin token
+const verifyAdmin = (c: any): boolean => {
+  const authHeader = c.req.header('Authorization');
+  const expectedToken = `Bearer ${c.env.ADMIN_SECRET}`;
+  return authHeader === expectedToken;
+};
 
 // Health check
 app.get('/', (c) => {
@@ -57,8 +65,12 @@ app.get('/health/db', async (c) => {
   }
 });
 
-// Database schema initialization endpoint (admin only, protected)
+// Database schema initialization endpoint (admin only)
 app.post('/admin/init-schema', async (c) => {
+  if (!verifyAdmin(c)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
   try {
     const pool = createPool(c.env.DATABASE_URL);
     await initSchema(pool);
@@ -81,6 +93,10 @@ app.post('/admin/init-schema', async (c) => {
 
 // Manual scraper trigger (admin only)
 app.post('/admin/scrape', async (c) => {
+  if (!verifyAdmin(c)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
   try {
     const pool = createPool(c.env.DATABASE_URL);
     const scraperService = new ScraperService(pool);
