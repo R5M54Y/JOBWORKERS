@@ -23,6 +23,7 @@ interface JobListProps {
     remote?: boolean;
   };
   availableCategories?: string[];
+  user?: any;
 }
 
 function truncate(text: string, maxLength: number): string {
@@ -43,12 +44,13 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString();
 }
 
-export const JobListView = ({ jobs, pagination, filters, availableCategories = [] }: JobListProps) => {
+export const JobListView = ({ jobs, pagination, filters, availableCategories = [], user }: JobListProps) => {
   const currentPage = pagination.page;
   const totalPages = pagination.total_pages;
   
   return Layout({
     title: 'Job Explorer',
+    user,
     children: html`
       <div class="search-section">
         <form class="search-form" method="GET" action="/">

@@ -5,8 +5,9 @@ import { html } from 'hono/html';
 import { Layout } from './Layout';
 import type { Job } from '../types/job';
 
-interface JobDetailProps {
+interface JobDetailViewProps {
   job: Job;
+  user?: any;
 }
 
 function formatDate(dateString: string): string {
@@ -18,9 +19,10 @@ function formatDate(dateString: string): string {
   });
 }
 
-export const JobDetailView = ({ job }: JobDetailProps) => {
+export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
   return Layout({
-    title: `${job.title} at ${job.company}`,
+    title: job.title,
+    user,
     children: html`
       <a href="/" class="back-link">← Back to Job Explorer</a>
       

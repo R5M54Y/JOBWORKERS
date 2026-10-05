@@ -7,6 +7,7 @@ import type { SafeUser } from '../types/auth';
 
 interface AccountViewProps {
   user: SafeUser;
+  userFromLayout?: SafeUser;
 }
 
 function formatDate(dateString: string): string {
@@ -18,9 +19,10 @@ function formatDate(dateString: string): string {
   });
 }
 
-export const AccountView = ({ user }: AccountViewProps) => {
+export const AccountView = ({ user, userFromLayout }: AccountViewProps) => {
   return Layout({
     title: 'Account',
+    user: userFromLayout || user,
     children: html`
       <div class="account-container">
         <div class="account-card">
