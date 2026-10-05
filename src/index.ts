@@ -75,7 +75,11 @@ try {
 
   // Call internal API
   const apiUrl = `${new URL(c.req.url).origin}/api/jobs?${params.toString()}`;
-  const response = await fetch(apiUrl);
+  const response = await fetch(apiUrl, {
+    headers: {
+      'Origin': new URL(c.req.url).origin,
+    },
+  });
 
   if (!response.ok) {
     console.error(`API error: ${response.status}`, await response.text());
