@@ -8,6 +8,7 @@ import { ScraperService } from './scrapers/ScraperService';
 import { handleListJobs, handleGetJob } from './routes/jobs';
 import { handleRegister, handleLogin, handleLogout, handleMe } from './routes/auth';
 import { handleSaveJob, handleRemoveJob, handleListSavedJobs } from './routes/savedJobs';
+import { handleApplyJob, handleListApplications, handleGetApplication, handleUpdateApplicationStatus } from './routes/applications';
 import { authMiddleware, requireAuth } from './middleware/auth';
 import { JobListView } from './views/JobList';
 import { JobDetailView } from './views/JobDetail';
@@ -15,6 +16,7 @@ import { LoginView } from './views/Login';
 import { RegisterView } from './views/Register';
 import { AccountView } from './views/Account';
 import { SavedJobsView } from './views/SavedJobs';
+import { ApplicationsView } from './views/Applications';
 
 // Cloudflare environment bindings
 type Env = {
@@ -158,6 +160,48 @@ app.get('/saved-jobs', requireAuth, async (c) => {
     );
   } catch (error) {
     console.error('Error rendering saved jobs:', error);
+    return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
+  }
+});
+
+// Applications page (protected)
+app.get('/applications', requireAuth, async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.redirect('/login');
+  }
+
+  try {
+    const page = parseInt(c.req.query('page') || '1', 10);
+    const limit = 20;
+
+    if (page < 1) {
+      return c.redirect('/applications');
+    }
+
+    // Call internal API
+    const apiUrl = `${new URL(c.req.url).origin}/api/applications?page=${page}&limit=${limit}`;
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Cookie': c.req.header('cookie') || '',
+      },
+    });
+
+    const data = await response.json() as any;
+
+    if (!response.ok) {
+      return c.html(html`<div class="error-state">Unable to load applications. Please try again.</div>`);
+    }
+
+    return c.html(
+      ApplicationsView({
+        applications: data.applications || [],
+        pagination: data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 },
+        user,
+      })
+    );
+  } catch (error) {
+    console.error('Error rendering applications:', error);
     return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
   }
 });
@@ -321,6 +365,28 @@ app.delete('/api/jobs/:id/save', async (c) => {
 // List saved jobs for authenticated user
 app.get('/api/saved-jobs', async (c) => {
   return handleListSavedJobs(c);
+});
+
+// ===== JOB APPLICATION ENDPOINTS =====
+
+// Apply to a job
+app.post('/api/jobs/:id/apply', async (c) => {
+  return handleApplyJob(c);
+});
+
+// List user's applications
+app.get('/api/applications', async (c) => {
+  return handleListApplications(c);
+});
+
+// Get single application
+app.get('/api/applications/:id', async (c) => {
+  return handleGetApplication(c);
+});
+
+// Update application status
+app.patch('/api/applications/:id', async (c) => {
+  return handleUpdateApplicationStatus(c);
 });
 
 // ===== PUBLIC API ENDPOINTS =====
