@@ -366,5 +366,4 @@ export const Layout = ({ title, children, user }: LayoutProps) => (
         </main>
       </body>
     </html>
-  </>
 );
