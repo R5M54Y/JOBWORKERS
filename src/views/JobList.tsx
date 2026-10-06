@@ -2,6 +2,7 @@
 // Server-rendered job explorer
 
 import { Layout } from './Layout';
+import { stripHtml } from '../utils/sanitizeHtml';
 import type { Job } from '../types/job';
 
 interface JobListProps {
@@ -128,7 +129,7 @@ export const JobListView = ({ jobs, pagination, filters, availableCategories = [
                   <span>{formatDate(typeof job.created_at === 'string' ? job.created_at : job.created_at.toString())}</span>
                 </div>
                 <div class="job-card-description">
-                  {truncate(job.description.replace(/<[^>]*>/g, ''), 200)}
+                  {truncate(stripHtml(job.description), 200)}
                 </div>
               </div>
             </a>

@@ -1,8 +1,10 @@
-// JOBWORKERS Saved Jobs Page
-// Server-rendered saved jobs listing for authenticated users
+// JOBWORKERS Saved Jobs View
+// Server-rendered saved jobs page
 
 import { html } from 'hono/html';
 import { Layout } from './Layout';
+import { stripHtml } from '../utils/sanitizeHtml';
+import type { Job } from '../types/job';
 import type { SafeUser } from '../types/auth';
 
 interface SavedJobsViewProps {
@@ -76,7 +78,7 @@ export const SavedJobsView = ({ jobs, pagination, user }: SavedJobsViewProps) =>
           </div>
           
           <div class="saved-job-description">
-            ${truncate(job.description.replace(/<[^>]*>/g, ''), 200)}
+            ${truncate(stripHtml(job.description), 200)}
           </div>
           
           <div class="saved-job-actions">

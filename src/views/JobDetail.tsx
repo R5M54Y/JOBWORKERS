@@ -3,6 +3,7 @@
 
 import { html, raw } from 'hono/html';
 import { Layout } from './Layout';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import type { Job } from '../types/job';
 
 interface JobDetailViewProps {
@@ -17,16 +18,6 @@ function formatDate(dateString: string): string {
     month: 'long', 
     day: 'numeric' 
   });
-}
-
-function sanitizeHtml(dirty: string): string {
-  // Remove dangerous tags and attributes
-  return dirty
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/<style[^>]*>.*?<\/style>/gi, '')
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/on\w+\s*=\s*[^\s>]*/gi, '');
 }
 
 export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
