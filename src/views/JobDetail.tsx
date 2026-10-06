@@ -73,7 +73,7 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
         </div>
         
         <div class="job-detail-description">
-          ${job.description}
+          ${job.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
         </div>
         
         <a 
