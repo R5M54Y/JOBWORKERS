@@ -22,7 +22,7 @@ export const RegisterView = ({ error }: RegisterViewProps) => {
             </div>
           ` : ''}
           
-          <form method="POST" action="/register" class="auth-form">
+          <form method="POST" action="/auth/register" class="auth-form">
             <div class="form-group">
               <label for="email">Email</label>
               <input 
