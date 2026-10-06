@@ -1,7 +1,7 @@
 // JOBWORKERS Job Detail View
 // Server-rendered job detail page
 
-import { html } from 'hono/html';
+import { html, raw } from 'hono/html';
 import { Layout } from './Layout';
 import type { Job } from '../types/job';
 
@@ -85,7 +85,7 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
         </div>
         
         <div class="job-detail-description">
-          ${html`${cleanDescription}`}
+          ${raw(cleanDescription)}
         </div>
         
         <a 
