@@ -73,7 +73,13 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
         </div>
         
         <div class="job-detail-description">
-          ${job.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
+          ${html.raw(
+            job.description
+              .replace(/<script[^>]*>.*?<\/script>/gi, '')
+              .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
+              .replace(/on\w+="[^"]*"/gi, '')
+              .replace(/on\w+='[^']*'/gi, '')
+          )}
         </div>
         
         <a 
