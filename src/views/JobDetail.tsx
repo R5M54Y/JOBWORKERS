@@ -84,8 +84,8 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
           ` : ''}
         </div>
         
-        <div class="job-detail-description" data-html-safe>
-          ${cleanDescription}
+        <div class="job-detail-description">
+          ${html`${cleanDescription}`}
         </div>
         
         <a 
