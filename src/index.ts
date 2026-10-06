@@ -165,7 +165,7 @@ app.get('/saved-jobs', requireAuth, async (c) => {
     // Call repository directly instead of internal fetch
     const { SavedJobRepository } = await import('./repositories/SavedJobRepository');
     const repo = new SavedJobRepository(c.env.DB);
-    const { jobs, total } = await repo.listSavedJobsByUser(user.id, page, limit);
+    const { jobs, total } = await repo.listSavedJobs(user.id, page, limit);
 
     const totalPages = Math.ceil(total / limit);
 
