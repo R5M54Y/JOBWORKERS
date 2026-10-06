@@ -19,7 +19,19 @@ function formatDate(dateString: string): string {
   });
 }
 
+function sanitizeHtml(dirty: string): string {
+  // Remove dangerous tags and attributes
+  return dirty
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
+    .replace(/<style[^>]*>.*?<\/style>/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/on\w+\s*=\s*[^\s>]*/gi, '');
+}
+
 export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
+  const cleanDescription = sanitizeHtml(job.description);
+  
   return Layout({
     title: job.title,
     user,
@@ -72,14 +84,8 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
           ` : ''}
         </div>
         
-        <div class="job-detail-description">
-          ${html.raw(
-            job.description
-              .replace(/<script[^>]*>.*?<\/script>/gi, '')
-              .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-              .replace(/on\w+="[^"]*"/gi, '')
-              .replace(/on\w+='[^']*'/gi, '')
-          )}
+        <div class="job-detail-description" data-html-safe>
+          ${cleanDescription}
         </div>
         
         <a 
