@@ -22,7 +22,7 @@ export const RegisterView = ({ error }: RegisterViewProps) => {
             </div>
           ` : ''}
           
-          <form method="POST" action="/auth/register" class="auth-form">
+          <form id="register-form" class="auth-form">
             <div class="form-group">
               <label for="email">Email</label>
               <input 
@@ -169,6 +169,46 @@ export const RegisterView = ({ error }: RegisterViewProps) => {
           font-size: 0.875rem;
         }
       </style>
+      
+      <script>
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          const confirmPassword = document.getElementById('confirm-password').value;
+          
+          if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+          }
+          
+          try {
+            const response = await fetch('/auth/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email,
+                password,
+              }),
+            });
+            
+            if (response.ok) {
+              // Registration successful, redirect to home
+              window.location.href = '/';
+            } else if (response.status === 409) {
+              alert('Email already registered');
+            } else {
+              const error = await response.json();
+              alert(error.error || 'Registration failed');
+            }
+          } catch (error) {
+            alert('Registration error: ' + error.message);
+          }
+        });
+      </script>
     `,
   });
 };
