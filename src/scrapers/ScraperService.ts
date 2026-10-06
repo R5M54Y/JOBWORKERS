@@ -5,8 +5,17 @@ import { IJobScraper, ScraperResult, PipelineResult, NormalizedJob } from './typ
 import { RemoteOKScraper } from './RemoteOKScraper';
 import { RemotiveScraper } from './RemotiveScraper';
 import { JobicyScraper } from './JobicyScraper';
+import { AshbyScraper } from './AshbyScraper';
 import { JobRepository } from '../repositories/JobRepository';
 import { CreateJobInput } from '../types/job';
+
+// Ashby board configurations
+const ASHBY_BOARDS = [
+  {
+    url: 'https://jobs.ashbyhq.com/toptal',
+    company: 'Toptal',
+  },
+];
 
 export class ScraperService {
   private scrapers: IJobScraper[];
@@ -17,6 +26,8 @@ export class ScraperService {
       new RemoteOKScraper(),
       new RemotiveScraper(),
       new JobicyScraper(),
+      // Register Ashby boards
+      ...ASHBY_BOARDS.map(board => new AshbyScraper(board.url, board.company)),
     ];
     this.repository = new JobRepository(db);
   }
