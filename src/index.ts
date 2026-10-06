@@ -162,31 +162,28 @@ app.get('/saved-jobs', requireAuth, async (c) => {
       return c.redirect('/saved-jobs');
     }
 
-    // Call internal API
-    const apiUrl = `${new URL(c.req.url).origin}/api/saved-jobs?page=${page}&limit=${limit}`;
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Cookie': c.req.header('cookie') || '',
-      },
-    });
+    // Call repository directly instead of internal fetch
+    const { SavedJobRepository } = await import('./repositories/SavedJobRepository');
+    const repo = new SavedJobRepository(c.env.DB);
+    const { jobs, total } = await repo.listSavedJobsByUser(user.id, page, limit);
 
-    if (!response.ok) {
-      console.error(`Saved jobs API error: ${response.status}`, await response.text());
-      return c.html(html`<div class="error-state">Unable to load saved jobs. Please try again.</div>`);
-    }
-
-    const data = await response.json() as any;
+    const totalPages = Math.ceil(total / limit);
 
     return c.html(
       SavedJobsView({
-        jobs: data.data || [],
-        pagination: data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 },
+        jobs,
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: totalPages,
+        },
         user,
       })
     );
   } catch (error) {
-    console.error('Error rendering saved jobs:', error);
-    return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
+    console.error('Failed to load saved jobs:', error);
+    return c.html(html`<div class="error-state">Unable to load saved jobs. Please try again.</div>`);
   }
 });
 
@@ -205,31 +202,28 @@ app.get('/applications', requireAuth, async (c) => {
       return c.redirect('/applications');
     }
 
-    // Call internal API
-    const apiUrl = `${new URL(c.req.url).origin}/api/applications?page=${page}&limit=${limit}`;
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Cookie': c.req.header('cookie') || '',
-      },
-    });
+    // Call repository directly instead of internal fetch
+    const { JobApplicationRepository } = await import('./repositories/JobApplicationRepository');
+    const repo = new JobApplicationRepository(c.env.DB);
+    const { applications, total } = await repo.listApplicationsByUser(user.id, page, limit);
 
-    if (!response.ok) {
-      console.error(`Applications API error: ${response.status}`, await response.text());
-      return c.html(html`<div class="error-state">Unable to load applications. Please try again.</div>`);
-    }
-
-    const data = await response.json() as any;
+    const totalPages = Math.ceil(total / limit);
 
     return c.html(
       ApplicationsView({
-        applications: data.applications || [],
-        pagination: data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 },
+        applications,
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: totalPages,
+        },
         user,
       })
     );
   } catch (error) {
-    console.error('Error rendering applications:', error);
-    return c.html(html`<div class="error-state">An error occurred. Please try again later.</div>`);
+    console.error('Failed to load applications:', error);
+    return c.html(html`<div class="error-state">Unable to load applications. Please try again.</div>`);
   }
 });
 
