@@ -236,13 +236,12 @@ app.get('/applications', requireAuth, async (c) => {
 // Job Detail page
 app.get('/jobs/:id', async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = parseInt(c.req.param('id'), 10);
     
-    // Call internal API
-    const apiUrl = `${new URL(c.req.url).origin}/api/jobs/${id}`;
-    const response = await fetch(apiUrl);
+    if (isNaN(id)) {
+      return c.html(html`<div class="error-state">Invalid job ID</div>`, 400);
+    }
     
-    // Call repository directly (avoid CORS issues)
     const repo = new JobRepository(c.env.DB);
     const job = await repo.getJobById(id);
     
