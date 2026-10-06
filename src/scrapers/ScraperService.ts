@@ -6,14 +6,23 @@ import { RemoteOKScraper } from './RemoteOKScraper';
 import { RemotiveScraper } from './RemotiveScraper';
 import { JobicyScraper } from './JobicyScraper';
 import { LeverScraper } from './LeverScraper';
+import { AshbyScraper } from './AshbyScraper';
 import { JobRepository } from '../repositories/JobRepository';
 import { CreateJobInput } from '../types/job';
 
-// Lever/Ashby board configurations
+// Lever board configurations
 const LEVER_BOARDS = [
   {
     url: 'https://jobs.lever.co/toptal',
     company: 'Toptal',
+  },
+];
+
+// Ashby board configurations
+const ASHBY_BOARDS = [
+  {
+    url: 'https://jobs.ashbyhq.com/ashby',
+    company: 'Ashby',
   },
 ];
 
@@ -26,8 +35,10 @@ export class ScraperService {
       new RemoteOKScraper(),
       new RemotiveScraper(),
       new JobicyScraper(),
-      // Register Lever boards (source='ashby' for config consistency)
+      // Register Lever boards
       ...LEVER_BOARDS.map(board => new LeverScraper(board.url, board.company)),
+      // Register Ashby boards
+      ...ASHBY_BOARDS.map(board => new AshbyScraper(board.url, board.company)),
     ];
     this.repository = new JobRepository(db);
   }

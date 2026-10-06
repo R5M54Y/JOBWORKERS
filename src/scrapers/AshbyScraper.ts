@@ -16,19 +16,15 @@ interface AshbyJobLocation {
 interface AshbyJob {
   id: string;
   title: string;
-  teamName?: string;
-  departmentName?: string;
+  teamId?: string;
+  locationId?: string;
   locationName?: string;
-  location?: AshbyJobLocation;
-  secondaryLocations?: AshbyJobLocation[];
-  employmentType?: string;
-  isRemote?: boolean;
-  description?: string;
-  descriptionHtml?: string;
-  publishedDate?: string;
-  updatedAt?: string;
-  jobUrl?: string;
-  applyUrl?: string;
+  workplaceType?: string; // "Remote", "Onsite", "Hybrid"
+  employmentType?: string; // "FullTime", "PartTime", "Contract"
+  secondaryLocations?: Array<{
+    locationId: string;
+    locationName: string;
+  }>;
   compensationTierSummary?: string;
 }
 
@@ -99,27 +95,28 @@ export class AshbyScraper implements IJobScraper {
 
   private extractJobsFromHtml(html: string): RawJob[] {
     // Ashby embeds job data in window.__appData
-    // Look for: window.__appData = {...}
-    const appDataMatch = html.match(/window\.__appData\s*=\s*({.*?});/s);
+    // Look for: window.__appData = {...};
+    const appDataMatch = html.match(/window\.__appData\s*=\s*(\{.+?\});/s);
     
     if (!appDataMatch) {
-      // No jobs found or different structure
+      console.error('[ashby] No window.__appData found in HTML');
       return [];
     }
 
     try {
       const appData = JSON.parse(appDataMatch[1]);
       
-      // Jobs might be in various locations depending on Ashby version
+      // Ashby structure: appData.jobBoard.jobPostings[]
+      if (appData.jobBoard?.jobPostings && Array.isArray(appData.jobBoard.jobPostings)) {
+        return appData.jobBoard.jobPostings;
+      }
+      
+      // Fallback: check other possible locations
       if (appData.jobs && Array.isArray(appData.jobs)) {
         return appData.jobs;
       }
-      
-      if (appData.jobBoard && appData.jobBoard.jobs) {
-        return appData.jobBoard.jobs;
-      }
 
-      // If no jobs array found, return empty
+      console.warn('[ashby] No jobPostings array found in window.__appData');
       return [];
     } catch (error) {
       console.error('[ashby] Failed to parse embedded job data:', error);
@@ -135,49 +132,34 @@ export class AshbyScraper implements IJobScraper {
         return null; // Missing required fields
       }
 
-      // Build job URL
-      const jobUrl = job.jobUrl || job.applyUrl || `${this.endpoint}/${job.id}`;
+      // Build job URL: https://jobs.ashbyhq.com/{slug}/{jobId}
+      const jobUrl = `${this.endpoint}/${job.id}`;
 
       // Format location
       const location = this.formatLocation(job);
 
-      // Determine if remote
-      const isRemote = job.isRemote === true || location.toLowerCase().includes('remote');
-
-      // Extract description (prefer plain text, fallback to HTML stripped)
-      const description = job.description || this.stripHtml(job.descriptionHtml || '');
-
-      // Parse employment type
-      const employmentType = (job.employmentType || 'full-time')
-        .toLowerCase()
-        .replace(/\s+/g, '-');
-
-      // Parse category from department or team
-      const category = (job.departmentName || job.teamName || 'other')
-        .toLowerCase()
-        .replace(/\s+/g, '-');
-
-      // Parse posted date
-      let postedAt: Date | undefined;
-      if (job.publishedDate) {
-        const parsed = new Date(job.publishedDate);
-        if (!isNaN(parsed.getTime())) {
-          postedAt = parsed;
-        }
-      } else if (job.updatedAt) {
-        const parsed = new Date(job.updatedAt);
-        if (!isNaN(parsed.getTime())) {
-          postedAt = parsed;
-        }
+      // Parse employment type: "FullTime" -> "full-time"
+      let employmentType = 'full-time';
+      if (job.employmentType) {
+        employmentType = job.employmentType
+          .replace(/([A-Z])/g, '-$1')
+          .toLowerCase()
+          .replace(/^-/, '');
       }
+
+      // Category placeholder (Ashby jobPostings minimal data)
+      const category = 'engineering';
+
+      // No posted_at in jobPostings array, use current date as fallback
+      const postedAt = new Date();
 
       return {
         source: this.name,
         source_job_id: job.id,
         title: job.title.trim(),
         company: this.company,
-        location: isRemote ? 'Remote' : location,
-        description: description.trim().substring(0, 5000), // Limit description length
+        location: location,
+        description: job.compensationTierSummary || job.title, // Minimal description
         url: jobUrl,
         category: category,
         employment_type: employmentType,
@@ -195,38 +177,16 @@ export class AshbyScraper implements IJobScraper {
       return job.locationName;
     }
 
-    // Use location object
-    if (job.location) {
-      if (job.location.name) return job.location.name;
-      
-      if (job.location.addressComponents) {
-        const parts: string[] = [];
-        const addr = job.location.addressComponents;
-        
-        if (addr.city) parts.push(addr.city);
-        if (addr.state) parts.push(addr.state);
-        if (addr.country) parts.push(addr.country);
-        
-        if (parts.length > 0) return parts.join(', ');
-      }
-      
-      if (job.location.address) return job.location.address;
+    // Use workplaceType as fallback
+    if (job.workplaceType === 'Remote') {
+      return 'Remote';
     }
 
     // Use first secondary location
     if (job.secondaryLocations && job.secondaryLocations.length > 0) {
-      const loc = job.secondaryLocations[0];
-      if (loc.name) return loc.name;
+      return job.secondaryLocations[0].locationName;
     }
 
     return 'Remote';
-  }
-
-  private stripHtml(html: string): string {
-    // Basic HTML tag removal
-    return html
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
   }
 }

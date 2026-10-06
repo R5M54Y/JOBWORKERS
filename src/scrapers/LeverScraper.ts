@@ -34,7 +34,7 @@ interface LeverJob {
 }
 
 export class LeverScraper implements IJobScraper {
-  readonly name = 'ashby'; // Keep source as 'ashby' for consistency with config
+  readonly name = 'lever'; // Lever jobs must have source='lever'
   readonly endpoint: string;
   
   private readonly timeout = 30000; // 30s
