@@ -242,19 +242,17 @@ app.get('/jobs/:id', async (c) => {
     const apiUrl = `${new URL(c.req.url).origin}/api/jobs/${id}`;
     const response = await fetch(apiUrl);
     
-    if (response.status === 404) {
+    // Call repository directly (avoid CORS issues)
+    const repo = new JobRepository(c.env.DB);
+    const job = await repo.getJobById(id);
+    
+    if (!job) {
       return c.html(html`<div class="error-state">Job not found</div>`, 404);
     }
-    
-    if (!response.ok) {
-      return c.html(html`<div class="error-state">Unable to load job. Please try again.</div>`);
-    }
-
-    const data = await response.json() as any;
 
     return c.html(
       JobDetailView({
-        job: data.data,
+        job,
       })
     );
   } catch (error) {
