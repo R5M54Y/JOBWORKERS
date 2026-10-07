@@ -10,8 +10,8 @@ crons = ["0 0 * * *"]
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
-database_name = "jobworkers-db"
-database_id = "28c34a6b-6fca-40f0-b8d9-b7f37b6a76b8"
+database_name = "remotejobs"
+database_id = "aff78497-930d-4fe1-a576-1cb80928dd6f"
 
 # Environment variables (secrets via wrangler secret put)
 [vars]
