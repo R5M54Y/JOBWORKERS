@@ -11,6 +11,7 @@ import { handleSaveJob, handleRemoveJob, handleListSavedJobs } from './routes/sa
 import { handleApplyJob, handleListApplications, handleGetApplication, handleUpdateApplicationStatus } from './routes/applications';
 import { handleCreateSavedSearch, handleListSavedSearches, handleGetSavedSearch, handleUpdateSavedSearch, handleDeleteSavedSearch, handleListJobAlerts, handleMarkAlertRead } from './routes/savedSearches';
 import { authMiddleware, requireAuth } from './middleware/auth';
+import { getBrandingConfig } from './config/branding';
 import { JobListView } from './views/JobList';
 import { JobDetailView } from './views/JobDetail';
 import { LoginView } from './views/Login';
@@ -25,12 +26,22 @@ import { AlertsView } from './views/Alerts';
 type Env = {
   DB: D1Database;
   ADMIN_SECRET: string;
+  SITE_NAME?: string;
+  SITE_TAGLINE?: string;
+  SITE_COPYRIGHT?: string;
 };
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { user?: any; branding?: any } }>();
 
 // Auth middleware (runs on all requests)
 app.use('*', authMiddleware);
+
+// Branding middleware (inject site config)
+app.use('*', async (c, next) => {
+  const branding = getBrandingConfig(c.env);
+  c.set('branding', branding);
+  await next();
+});
 
 // CORS middleware for public API
 app.use('/api/*', cors({
