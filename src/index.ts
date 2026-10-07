@@ -511,6 +511,109 @@ app.get('/api/jobs/:id', async (c) => {
   return handleGetJob(c, c.env.DB);
 });
 
+// ===== SEO ROUTES =====
+
+// Sitemap index (XML)
+app.get('/sitemap.xml', async (c) => {
+  const baseUrl = 'https://jobworkers.usajobs.workers.dev';
+  
+  const sitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${baseUrl}/sitemap-jobs.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${baseUrl}/sitemap-pages.xml</loc>
+  </sitemap>
+</sitemapindex>`;
+
+  c.header('Content-Type', 'application/xml; charset=UTF-8');
+  c.header('Cache-Control', 'public, max-age=86400');
+  return c.text(sitemapIndex);
+});
+
+// Sitemap: Static pages
+app.get('/sitemap-pages.xml', async (c) => {
+  const baseUrl = 'https://jobworkers.usajobs.workers.dev';
+  
+  const pages = [
+    { url: '/', changefreq: 'daily', priority: '1.0' },
+    { url: '/login', changefreq: 'monthly', priority: '0.8' },
+    { url: '/register', changefreq: 'monthly', priority: '0.8' },
+  ];
+
+  const urls = pages.map(page => `
+  <url>
+    <loc>${baseUrl}${page.url}</loc>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`).join('');
+
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+
+  c.header('Content-Type', 'application/xml; charset=UTF-8');
+  c.header('Cache-Control', 'public, max-age=86400');
+  return c.text(sitemap);
+});
+
+// Sitemap: Job listings (dynamic, paginated)
+app.get('/sitemap-jobs.xml', async (c) => {
+  try {
+    const baseUrl = 'https://jobworkers.usajobs.workers.dev';
+    const repo = new JobRepository(c.env.DB);
+    
+    // Fetch all active jobs
+    const jobs = await repo.listJobs({
+      status: 'active',
+      limit: 50000,
+      offset: 0,
+    });
+
+    const urls = jobs.map(job => `
+  <url>
+    <loc>${baseUrl}/jobs/${job.id}</loc>
+    <lastmod>${job.updated_at || job.created_at}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('');
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+
+    c.header('Content-Type', 'application/xml; charset=UTF-8');
+    c.header('Cache-Control', 'public, max-age=3600');
+    return c.text(sitemap);
+  } catch (error) {
+    return c.text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', 500);
+  }
+});
+
+// Robots.txt
+app.get('/robots.txt', (c) => {
+  const robots = `User-agent: *
+Allow: /
+Allow: /jobs/
+Allow: /api/jobs
+Disallow: /admin/
+Disallow: /account
+Disallow: /applications
+Disallow: /saved-jobs
+
+Sitemap: https://jobworkers.usajobs.workers.dev/sitemap.xml
+
+# Crawl-delay in seconds
+Crawl-delay: 1`;
+
+  c.header('Content-Type', 'text/plain; charset=UTF-8');
+  c.header('Cache-Control', 'public, max-age=86400');
+  return c.text(robots);
+});
+
 // ===== SCHEDULED HANDLER =====
 
 export default {

@@ -364,6 +364,15 @@ export const Layout = ({ title, children, user }: LayoutProps) => (
         <main class="container">
           {children}
         </main>
+        <footer style="background: #f9fafb; border-top: 1px solid #e5e7eb; margin-top: 4rem; padding: 2rem 0;">
+          <div class="container" style="text-align: center; font-size: 0.875rem; color: #666;">
+            <p style="margin-bottom: 1rem;">© 2026 JOBWORKERS. Remote job opportunities aggregated from top sources.</p>
+            <p>
+              <a href="/sitemap.xml" style="color: #2563eb; text-decoration: none;">Sitemap</a> |
+              <a href="/robots.txt" style="color: #2563eb; text-decoration: none; margin-left: 1rem;">Robots.txt</a>
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
 );
