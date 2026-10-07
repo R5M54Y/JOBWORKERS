@@ -159,6 +159,12 @@ export const JobListView = ({ jobs, pagination, filters, availableCategories = [
           </div>
         </div>
         
+        {/* Ad Container */}
+        <div class="mb-4">
+          <script async data-cfasync="false" src="https://pl31517494.profitableratecpmnetwork.com/93be112345a2807dbde6fc7c69a63baf/invoke.js"></script>
+          <div id="container-93be112345a2807dbde6fc7c69a63baf"></div>
+        </div>
+        
         {/* Results Header */}
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="mb-0 text-muted">
