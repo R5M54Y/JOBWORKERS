@@ -83,9 +83,9 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
         </ol>
       </nav>
       
-      <div class="row gap-4">
+      <div class="row g-4">
         <!-- Main Content -->
-        <div class="col-lg-8">
+        <div class="col-md-8">
           <!-- Job Header Card -->
           <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4">
@@ -202,7 +202,7 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
         </div>
         
         <!-- Sidebar -->
-        <div class="col-lg-4">
+        <div class="col-md-4">
           <!-- Source Card -->
           <div class="card shadow-sm border-0 mb-3">
             <div class="card-body p-3">
