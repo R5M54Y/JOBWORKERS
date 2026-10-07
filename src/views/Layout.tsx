@@ -316,7 +316,7 @@ export const Layout = ({ title, children, user }: LayoutProps) => (
       <script src="https://pl31517511.profitableratecpmnetwork.com/0a/6f/45/0a6f45f6cd118b7b19498f9076f1a08f.js"></script>
       
       {/* Histats.com START (async) */}
-      <script type="text/javascript">{`
+      <script type="text/javascript" dangerouslySetInnerHTML={{__html: `
         var _Hasync = _Hasync || [];
         _Hasync.push(['Histats.start', '1,5052094,4,511,95,18,00000000']);
         _Hasync.push(['Histats.fasi', '1']);
@@ -328,7 +328,7 @@ export const Layout = ({ title, children, user }: LayoutProps) => (
           hs.src = ('//s10.histats.com/js15_as.js');
           (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
         })();
-      `}</script>
+      `}}></script>
       <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?5052094&amp;101" alt="" border="0" /></a></noscript>
       {/* Histats.com END */}
     </body>
