@@ -307,18 +307,18 @@ export const Layout = ({ title, children, user, branding }: LayoutProps) => {
               </p>
             </div>
             <div class="col-md-6 text-center text-md-end">
-              <a href="/sitemap.xml" class="me-3 small">
-                <i class="bi bi-diagram-3 me-1"></i>Sitemap
-              </a>
-              <a href="/robots.txt" class="small">
-                <i class="bi bi-robot me-1"></i>Robots.txt
-              </a>
+              <p class="mb-0 text-muted small">
+                {copyright}
+              </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+              <a href="/sitemap.xml" class="me-3 small"><i class="bi bi-diagram-3 me-1"></i>Sitemap</a>
+              <a href="/robots.txt" class="small"><i class="bi bi-robot me-1"></i>Robots.txt</a>
             </div>
           </div>
         </div>
       </footer>
-      
-      {/* Bootstrap 5 JS Bundle */}
+
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
       
       {/* Third-party tracking scripts */}
@@ -342,4 +342,5 @@ export const Layout = ({ title, children, user, branding }: LayoutProps) => {
       {/* Histats.com END */}
     </body>
   </html>
-);
+  );
+};
