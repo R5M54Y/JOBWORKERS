@@ -177,6 +177,12 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
             </div>
           </div>
           
+          <!-- Ad Container -->
+          <div class="mb-4">
+            <script async="async" data-cfasync="false" src="https://pl31517494.profitableratecpmnetwork.com/93be112345a2807dbde6fc7c69a63baf/invoke.js"></script>
+            <div id="container-93be112345a2807dbde6fc7c69a63baf"></div>
+          </div>
+          
           <!-- Job Description -->
           <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4">
