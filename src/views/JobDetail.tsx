@@ -23,10 +23,50 @@ function formatDate(dateString: string): string {
 export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
   const cleanDescription = sanitizeHtml(job.description);
   
+  // Build JobPosting schema per https://developers.google.com/search/docs/appearance/structured-data/job-posting
+  const jobPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": cleanDescription,
+    "datePosted": job.posted_at || job.created_at,
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": job.company
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": job.location,
+        "addressRegion": job.location.includes("Remote") ? "Remote" : undefined
+      }
+    },
+    "employmentType": job.employment_type.toUpperCase().replace(/-/g, '_'), // FULL_TIME, PART_TIME, etc.
+    "url": job.url,
+    ...(job.salary_min || job.salary_max ? {
+      "baseSalary": {
+        "@type": "MonetaryAmount",
+        "currency": "USD",
+        "value": {
+          "@type": "QuantitativeValue",
+          "minValue": job.salary_min,
+          "maxValue": job.salary_max,
+          "unitText": "YEAR"
+        }
+      }
+    } : {}),
+    ...(job.expires_at ? { "validThrough": job.expires_at } : {})
+  };
+  
   return Layout({
     title: job.title,
     user,
     children: html`
+      <script type="application/ld+json">
+        ${raw(JSON.stringify(jobPostingSchema))}
+      </script>
+      
       <a href="/" class="back-link">← Back to Job Explorer</a>
       
       <div class="job-detail">
