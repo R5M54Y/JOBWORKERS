@@ -6,11 +6,13 @@ import { Layout } from './Layout';
 
 interface RegisterViewProps {
   error?: string;
+  user?: any;
 }
 
-export const RegisterView = ({ error }: RegisterViewProps) => {
+export const RegisterView = ({ error, user }: RegisterViewProps) => {
   return Layout({
     title: 'Register',
+    user,
     children: html`
       <div class="auth-container">
         <div class="auth-card">

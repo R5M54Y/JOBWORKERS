@@ -6,11 +6,13 @@ import { Layout } from './Layout';
 
 interface LoginViewProps {
   error?: string;
+  user?: any;
 }
 
-export const LoginView = ({ error }: LoginViewProps) => {
+export const LoginView = ({ error, user }: LoginViewProps) => {
   return Layout({
     title: 'Login',
+    user,
     children: html`
       <div class="auth-container">
         <div class="auth-card">

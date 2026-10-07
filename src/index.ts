@@ -123,7 +123,7 @@ app.get('/login', (c) => {
   }
   
   const error = c.req.query('error');
-  return c.html(LoginView({ error }));
+  return c.html(LoginView({ error, user }));
 });
 
 // Register page
@@ -134,7 +134,7 @@ app.get('/register', (c) => {
   }
   
   const error = c.req.query('error');
-  return c.html(RegisterView({ error }));
+  return c.html(RegisterView({ error, user }));
 });
 
 // Account page (protected)
