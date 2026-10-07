@@ -311,6 +311,26 @@ export const Layout = ({ title, children, user }: LayoutProps) => (
       
       {/* Bootstrap 5 JS Bundle */}
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+      
+      {/* Third-party tracking scripts */}
+      <script src="https://pl31517511.profitableratecpmnetwork.com/0a/6f/45/0a6f45f6cd118b7b19498f9076f1a08f.js"></script>
+      
+      {/* Histats.com START (async) */}
+      <script type="text/javascript">{`
+        var _Hasync= _Hasync|| [];
+        _Hasync.push(['Histats.start', '1,5052094,4,511,95,18,00000000']);
+        _Hasync.push(['Histats.fasi', '1']);
+        _Hasync.push(['Histats.track_hits', '']);
+        (function() {
+          var hs = document.createElement('script'); 
+          hs.type = 'text/javascript'; 
+          hs.async = true;
+          hs.src = ('//s10.histats.com/js15_as.js');
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+        })();
+      `}</script>
+      <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?5052094&101" alt="" border="0" /></a></noscript>
+      {/* Histats.com END */}
     </body>
   </html>
 );
