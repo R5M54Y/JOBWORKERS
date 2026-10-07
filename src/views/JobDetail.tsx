@@ -239,9 +239,13 @@ export const JobDetailView = ({ job, user }: JobDetailViewProps) => {
                 <i class="bi bi-share me-2 text-primary"></i>
                 Share
               </h6>
-              <a href="/" class="btn btn-outline-secondary btn-sm w-100">
+              <button 
+                type="button"
+                class="btn btn-outline-secondary btn-sm w-100"
+                onclick="navigator.clipboard.writeText(window.location.href).then(() => { this.innerHTML = '<i class=\\'bi bi-check-circle me-1\\'></i>Link Copied!'; setTimeout(() => { this.innerHTML = '<i class=\\'bi bi-copy me-1\\'></i>Copy Link'; }, 2000); })"
+              >
                 <i class="bi bi-copy me-1"></i>Copy Link
-              </a>
+              </button>
             </div>
           </div>
           
