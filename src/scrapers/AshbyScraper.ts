@@ -26,6 +26,7 @@ interface AshbyJob {
     locationName: string;
   }>;
   compensationTierSummary?: string;
+  description?: string;
 }
 
 interface AshbyApiResponse {
@@ -80,8 +81,24 @@ export class AshbyScraper implements IJobScraper {
       // Extract job data from window.__appData or script tags
       // Ashby embeds job data in the initial HTML for SSR
       const jobs = this.extractJobsFromHtml(html);
+      
+      // Fetch full descriptions for each job
+      const enrichedJobs = await Promise.all(
+        jobs.map(async (job) => {
+          try {
+            const description = await this.fetchJobDescription(job.id);
+            return {
+              ...job,
+              description: description || job.description,
+            };
+          } catch (error) {
+            console.warn(`[ashby] Failed to fetch description for job ${job.id}:`, error);
+            return job;
+          }
+        })
+      );
 
-      return jobs;
+      return enrichedJobs;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
@@ -90,6 +107,69 @@ export class AshbyScraper implements IJobScraper {
         throw error;
       }
       throw new Error('Unknown error during fetch');
+    }
+  }
+
+  private async fetchJobDescription(jobId: string): Promise<string | null> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for detail fetch
+
+      const detailUrl = `${this.endpoint}/${jobId}`;
+      const response = await fetch(detailUrl, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'text/html',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const html = await response.text();
+      
+      // Extract description from job detail page
+      // Look for common patterns: <div class="description">, <article>, or content sections
+      const descriptionMatch = html.match(/<div[^>]*class="[^"]*description[^"]*"[^>]*>(.+?)<\/div>/is) ||
+                              html.match(/<article[^>]*>(.+?)<\/article>/is) ||
+                              html.match(/window\.__appData\s*=\s*(\{.+?\});/s);
+
+      if (descriptionMatch) {
+        let description = descriptionMatch[1];
+        
+        // If it's JSON (from window.__appData), parse it
+        if (description.startsWith('{')) {
+          try {
+            const appData = JSON.parse(description);
+            description = appData.jobPosting?.description || 
+                         appData.posting?.description ||
+                         appData.job?.description ||
+                         null;
+          } catch {
+            return null;
+          }
+        }
+        
+        // Clean HTML tags
+        if (typeof description === 'string') {
+          description = description
+            .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          return description.length > 50 ? description : null;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn(`[ashby] Error fetching job description:`, error);
+      return null;
     }
   }
 
@@ -154,10 +234,12 @@ export class AshbyScraper implements IJobScraper {
       const postedAt = new Date();
       
       // Ashby embedded data contains minimal info; use compensation as description preview
-      // Full description only available on job detail page fetch
-      const description = job.compensationTierSummary 
-        ? `Compensation: ${job.compensationTierSummary}. Visit job page for full details.`
-        : `Full job description available on job posting page.`;
+      // Full description fetched from job detail page
+      const description = job.description && job.description.length > 50
+        ? job.description
+        : (job.compensationTierSummary 
+          ? `Compensation: ${job.compensationTierSummary}. Visit job page for full details.`
+          : `Full job description available on job posting page.`);
 
       return {
         source: this.name,
