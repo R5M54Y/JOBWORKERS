@@ -152,6 +152,12 @@ export class AshbyScraper implements IJobScraper {
 
       // No posted_at in jobPostings array, use current date as fallback
       const postedAt = new Date();
+      
+      // Ashby embedded data contains minimal info; use compensation as description preview
+      // Full description only available on job detail page fetch
+      const description = job.compensationTierSummary 
+        ? `Compensation: ${job.compensationTierSummary}. Visit job page for full details.`
+        : `Full job description available on job posting page.`;
 
       return {
         source: this.name,
@@ -159,7 +165,7 @@ export class AshbyScraper implements IJobScraper {
         title: job.title.trim(),
         company: this.company,
         location: location,
-        description: job.compensationTierSummary || job.title, // Minimal description
+        description: description,
         url: jobUrl,
         category: category,
         employment_type: employmentType,
