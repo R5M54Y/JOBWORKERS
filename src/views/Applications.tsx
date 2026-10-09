@@ -16,6 +16,7 @@ interface ApplicationsViewProps {
     total_pages: number;
   };
   user: SafeUser;
+  branding?: any;
 }
 
 function formatDate(dateString: string): string {

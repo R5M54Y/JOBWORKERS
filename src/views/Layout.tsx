@@ -303,15 +303,11 @@ export const Layout = ({ title, children, user, branding }: LayoutProps) => {
           <div class="row">
             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
               <p class="mb-0 text-muted small">
-                © 2026 JOBWORKERS. Remote job opportunities aggregated from top sources.
-              </p>
-            </div>
-            <div class="col-md-6 text-center text-md-end">
-              <p class="mb-0 text-muted small">
                 {copyright}
               </p>
             </div>
             <div class="col-md-6 text-center text-md-end">
+              <a href="/privacy-policy" class="me-3 small"><i class="bi bi-shield-lock me-1"></i>Privacy Policy</a>
               <a href="/sitemap.xml" class="me-3 small"><i class="bi bi-diagram-3 me-1"></i>Sitemap</a>
               <a href="/robots.txt" class="small"><i class="bi bi-robot me-1"></i>Robots.txt</a>
             </div>

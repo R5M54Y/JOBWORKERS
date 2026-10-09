@@ -1,18 +1,19 @@
-name = "jobworkers"
+name = "remotejobs"
 main = "src/index.ts"
 compatibility_date = "2024-10-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Cron trigger: daily at midnight UTC
+# Cron trigger: every 3 hours
 [triggers]
-crons = ["0 0 * * *"]
+crons = ["0 */3 * * *"]
 
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
-database_name = "remotejobs"
-database_id = "aff78497-930d-4fe1-a576-1cb80928dd6f"
+database_name = "careerhub"
+database_id = "40906884-2e1a-4590-8457-f79cdeae7f51"
 
 # Environment variables (secrets via wrangler secret put)
 [vars]
+SITE_NAME = "CAREERHUB"
 # ADMIN_SECRET set via: wrangler secret put ADMIN_SECRET

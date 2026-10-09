@@ -9,6 +9,7 @@ import type { Job } from '../types/job';
 interface JobDetailViewProps {
   job: Job;
   user?: any;
+  branding?: any;
 }
 
 function formatDate(dateString: string): string {

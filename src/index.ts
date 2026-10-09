@@ -21,6 +21,7 @@ import { SavedJobsView } from './views/SavedJobs';
 import { ApplicationsView } from './views/Applications';
 import { SavedSearchesView } from './views/SavedSearches';
 import { AlertsView } from './views/Alerts';
+import { PrivacyPolicyView } from './views/PrivacyPolicy';
 
 // Cloudflare environment bindings
 type Env = {
@@ -118,6 +119,7 @@ try {
       },
       availableCategories,
       user: c.get('user'),
+      branding: c.get('branding'),
     })
   );
 } catch (error) {
@@ -134,7 +136,7 @@ app.get('/login', (c) => {
   }
   
   const error = c.req.query('error');
-  return c.html(LoginView({ error, user }));
+  return c.html(LoginView({ error, user, branding: c.get('branding') }));
 });
 
 // Register page
@@ -145,7 +147,7 @@ app.get('/register', (c) => {
   }
   
   const error = c.req.query('error');
-  return c.html(RegisterView({ error, user }));
+  return c.html(RegisterView({ error, user, branding: c.get('branding') }));
 });
 
 // Account page (protected)
@@ -155,7 +157,7 @@ app.get('/account', requireAuth, async (c) => {
     return c.redirect('/login');
   }
   
-  return c.html(AccountView({ user, userFromLayout: user }));
+  return c.html(AccountView({ user, userFromLayout: user, branding: c.get('branding') }));
 });
 
 // Saved jobs page (protected)
@@ -190,6 +192,7 @@ app.get('/saved-jobs', requireAuth, async (c) => {
           total_pages: totalPages,
         },
         user,
+        branding: c.get('branding'),
       })
     );
   } catch (error) {
@@ -230,6 +233,7 @@ app.get('/applications', requireAuth, async (c) => {
           total_pages: totalPages,
         },
         user,
+        branding: c.get('branding'),
       })
     );
   } catch (error) {
@@ -257,6 +261,8 @@ app.get('/jobs/:id', async (c) => {
     return c.html(
       JobDetailView({
         job,
+        user: c.get('user'),
+        branding: c.get('branding'),
       })
     );
   } catch (error) {
@@ -440,7 +446,7 @@ app.get('/saved-searches', async (c) => {
       unreadCounts[search.id] = count;
     }
 
-    return c.html(SavedSearchesView({ searches, unreadAlertCounts: unreadCounts, user }));
+    return c.html(SavedSearchesView({ searches, unreadAlertCounts: unreadCounts, user, branding: c.get('branding') }));
   } catch (error) {
     console.error('Failed to load saved searches:', error);
     return c.html(html`<div class="error-state">Failed to load saved searches</div>`);
@@ -464,11 +470,17 @@ app.get('/alerts', async (c) => {
     const alerts = await repo.getJobAlertsByUser(user.id, unreadOnly);
     const unreadCount = await repo.countUnreadAlertsByUser(user.id);
 
-    return c.html(AlertsView({ alerts, unreadCount, user }));
+    return c.html(AlertsView({ alerts, unreadCount, user, branding: c.get('branding') }));
   } catch (error) {
     console.error('Failed to load alerts:', error);
     return c.html(html`<div class="error-state">Failed to load alerts</div>`);
   }
+});
+
+// Privacy Policy page
+app.get('/privacy-policy', async (c) => {
+  const user = c.get('user');
+  return c.html(PrivacyPolicyView({ user, branding: c.get('branding') }));
 });
 
 // ===== SAVED SEARCH ENDPOINTS =====

@@ -15,7 +15,8 @@ interface SavedJobsViewProps {
     total: number;
     total_pages: number;
   };
-  user: SafeUser;
+  user?: any;
+  branding?: any;
 }
 
 function formatDate(dateString: string): string {

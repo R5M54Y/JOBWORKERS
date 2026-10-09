@@ -20,9 +20,10 @@ interface JobAlert {
 }
 
 interface AlertsViewProps {
-  alerts: JobAlert[];
+  alerts: any[];
   unreadCount: number;
   user?: any;
+  branding?: any;
 }
 
 export const AlertsView = ({ alerts, unreadCount, user }: AlertsViewProps) => {

@@ -7,6 +7,7 @@ import { Layout } from './Layout';
 interface RegisterViewProps {
   error?: string;
   user?: any;
+  branding?: any;
 }
 
 export const RegisterView = ({ error, user }: RegisterViewProps) => {

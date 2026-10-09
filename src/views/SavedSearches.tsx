@@ -17,9 +17,10 @@ interface SavedSearch {
 }
 
 interface SavedSearchesViewProps {
-  searches: SavedSearch[];
+  searches: any[];
   unreadAlertCounts: Record<number, number>;
   user?: any;
+  branding?: any;
 }
 
 export const SavedSearchesView = ({ searches, unreadAlertCounts, user }: SavedSearchesViewProps) => {

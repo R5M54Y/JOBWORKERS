@@ -6,8 +6,9 @@ import { Layout } from './Layout';
 import type { SafeUser } from '../types/auth';
 
 interface AccountViewProps {
-  user: SafeUser;
-  userFromLayout?: SafeUser;
+  user?: any;
+  userFromLayout?: any;
+  branding?: any;
 }
 
 function formatDate(dateString: string): string {

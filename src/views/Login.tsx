@@ -7,6 +7,7 @@ import { Layout } from './Layout';
 interface LoginViewProps {
   error?: string;
   user?: any;
+  branding?: any;
 }
 
 export const LoginView = ({ error, user }: LoginViewProps) => {

@@ -19,11 +19,12 @@ interface JobListProps {
     source?: string;
     job_type?: string;
     category?: string;
-    sort?: string;
     remote?: boolean;
+    sort?: string;
   };
   availableCategories?: string[];
   user?: any;
+  branding?: any;
 }
 
 function truncate(text: string, maxLength: number): string {
@@ -44,13 +45,14 @@ function formatDate(dateString: string): string {
   return date.toLocaleDateString();
 }
 
-export const JobListView = ({ jobs, pagination, filters, availableCategories = [], user }: JobListProps) => {
+export const JobListView = ({ jobs, pagination, filters, availableCategories = [], user, branding }: JobListProps) => {
   const currentPage = pagination.page;
   const totalPages = pagination.total_pages;
   
   return Layout({
     title: 'Job Explorer',
     user,
+    branding,
     children: (
       <>
         {/* Hero Search Section */}
